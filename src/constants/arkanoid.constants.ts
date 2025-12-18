@@ -1,40 +1,52 @@
-export const CANVAS_WIDTH = 600;
-export const CANVAS_HEIGHT = 400;
+import { GameConfig, PowerUpType } from "@/types/arkanoid.types";
 
-export const PADDLE_WIDTH = 100;
-export const PADDLE_HEIGHT = 15;
-export const PADDLE_SPEED = 8;
-
-export const BALL_RADIUS = 8;
-export const BALL_SPEED = 5;
-
-export const BRICK_WIDTH = 55;
-export const BRICK_HEIGHT = 25;
-export const BRICK_PADDING = 4;
-export const BRICK_OFFSET_TOP = 10;
-export const BRICK_OFFSET_LEFT = 7;
-
-export const BRICK_ROWS = 6;
-export const BRICK_COLS = 10;
-
-export const BRICK_COLORS = [
-  { color: '#FF6B6B', points: 70, hits: 2 },
-  { color: '#4ECDC4', points: 60, hits: 2 },
-  { color: '#FFE66D', points: 50, hits: 1 },
-  { color: '#95E1D3', points: 40, hits: 1 },
-  { color: '#A8E6CF', points: 30, hits: 1 },
-  { color: '#DCEDC8', points: 20, hits: 1 },
-];
-
-export const INITIAL_LIVES = 3;
-
-export const POWERUP_CONFIGS = {
-  multiBall: { color: '#FF6B6B', icon: '⚫⚫', chance: 0.03 },
-  gun: { color: '#4ECDC4', icon: '🔫', chance: 0.05 },
-  expandPaddle: { color: '#FFE66D', icon: '↔️', chance: 0.1 },
-  slowBall: { color: '#95E1D3', icon: '🐌', chance: 0.07 },
+export const GAME_CONFIG: GameConfig = {
+   CANVAS_WIDTH: 700,
+   CANVAS_HEIGHT: 500,
+   PADDLE_NORMAL_WIDTH: 100,
+   PADDLE_HEIGHT: 15,
+   BALL_RADIUS: 8,
+   BALL_SPEED: 5,
+   BLOCK_ROWS: 6,
+   BLOCK_COLS: 10,
+   BLOCK_WIDTH: 65,
+   BLOCK_HEIGHT: 25,
+   BLOCK_PADDING: 5,
+   POWER_UP_CHANCE: 0.3,
 };
 
-export const BULLET_WIDTH = 4;
-export const BULLET_HEIGHT = 10;
-export const BULLET_SPEED = 8;
+export const POWER_UP_COLORS: Record<PowerUpType, string> = {
+   [PowerUpType.WIDE_PADDLE]: "#22c55e",
+   [PowerUpType.SLOW_BALL]: "#3b82f6",
+   [PowerUpType.EXTRA_BALL]: "#f59e0b",
+   [PowerUpType.FAST_BALL]: "#ef4444",
+   [PowerUpType.SMALL_PADDLE]: "#8b5cf6",
+   [PowerUpType.SHOOTING]: "#ec4899",
+};
+
+export const POWER_UP_ICONS: Record<PowerUpType, string> = {
+   [PowerUpType.WIDE_PADDLE]: "⬌",
+   [PowerUpType.SLOW_BALL]: "🐌",
+   [PowerUpType.EXTRA_BALL]: "⚽",
+   [PowerUpType.FAST_BALL]: "⚡",
+   [PowerUpType.SMALL_PADDLE]: "⬍",
+   [PowerUpType.SHOOTING]: "🔫",
+};
+
+export const POWER_UP_NAMES: Record<PowerUpType, string> = {
+   [PowerUpType.WIDE_PADDLE]: "Широкая платформа",
+   [PowerUpType.SLOW_BALL]: "Медленный мяч",
+   [PowerUpType.EXTRA_BALL]: "Дополнительный мяч",
+   [PowerUpType.FAST_BALL]: "Быстрый мяч",
+   [PowerUpType.SMALL_PADDLE]: "Узкая платформа",
+   [PowerUpType.SHOOTING]: "Стрельба",
+};
+
+export const BLOCK_COLORS = [
+   "#8B008B",
+   "#FF69B4",
+   "#1E90FF",
+   "#7B68EE",
+   "#191970",
+   "#008000",
+];

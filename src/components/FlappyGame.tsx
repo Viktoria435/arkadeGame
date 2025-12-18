@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import useGameLogic from "@/hooks/useGameLogic";
+import useFlappyBird from "@/hooks/useFlappyBird";
 import GameModeSelector from "./GameModeSelector";
 
 export default function FlappyBirdGame() {
@@ -15,7 +15,7 @@ export default function FlappyBirdGame() {
       isListening,
       volumeLevel,
       handleStartGame,
-   } = useGameLogic();
+   } = useFlappyBird();
 
    return (
       <div className="relative w-full h-screen bg-gradient-to-b from-blue-300 to-blue-500 overflow-hidden">

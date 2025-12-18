@@ -18,7 +18,7 @@ import { useEffect, useRef, useState } from "react";
 
 type GameMode = "keyboard" | "voice" | null;
 
-export default function useGameLogic() {
+export default function useFlappyBird() {
    const canvasRef = useRef<HTMLCanvasElement | null>(null);
    const requestRef = useRef<number>(0);
 

@@ -1,1 +1,0 @@
-export type BoardCell = string | null | "shake";

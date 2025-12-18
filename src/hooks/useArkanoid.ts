@@ -1,473 +1,325 @@
-"use client";
-
-import { useState, useCallback, useRef } from "react";
-import type {
+import { useRef, useState, useCallback } from "react";
+import {
    Ball,
+   Block,
    Paddle,
-   Brick,
-   GameState,
    PowerUp,
-   PowerUpType,
    Bullet,
+   Particle,
+   GameState,
+   PowerUpType,
 } from "@/types/arkanoid.types";
-import {
-   CANVAS_WIDTH,
-   CANVAS_HEIGHT,
-   PADDLE_WIDTH,
-   PADDLE_HEIGHT,
-   PADDLE_SPEED,
-   BALL_RADIUS,
-   BALL_SPEED,
-   INITIAL_LIVES,
-   POWERUP_CONFIGS,
-   BULLET_WIDTH,
-   BULLET_HEIGHT,
-   BULLET_SPEED,
-} from "@/constants/arkanoid.constants";
-import {
-   createBricks,
-   checkBallBrickCollision,
-   checkBallPaddleCollision,
-   checkBulletBrickCollision,
-} from "@/utils/arkanoid.utils";
+import { GAME_CONFIG } from "@/constants/arkanoid.constants";
+import { PowerUpManager } from "@/utils/Arkanoid/powerUpManager";
 
-let nextBallId = 0;
-let nextPowerUpId = 0;
-let nextBulletId = 0;
+import {
+   createInitialPaddle,
+   createInitialBall,
+   createBlocks,
+} from "@/utils/Arkanoid/gameInit";
+import {
+   createBlockExplosion,
+   updateParticles,
+} from "@/app/arkanoid/(Game)/Particle";
+import {
+   checkBallBlockCollision,
+   checkBulletBlockCollision,
+   reflectBallFromBlock,
+   reflectBallFromPaddle,
+   checkBallPaddleCollision,
+   checkPowerUpPaddleCollision,
+   updateBallPosition,
+   isBallOutOfBounds,
+} from "@/utils/Arkanoid/arkanoid.utils";
 
 export const useArkanoid = () => {
-   const [paddle, setPaddle] = useState<Paddle>({
-      x: CANVAS_WIDTH / 2 - PADDLE_WIDTH / 2,
-      y: CANVAS_HEIGHT - 30,
-      width: PADDLE_WIDTH,
-      height: PADDLE_HEIGHT,
-      speed: PADDLE_SPEED,
-      hasGun: false,
-   });
+   const [score, setScore] = useState(0);
+   const [lives, setLives] = useState(3);
+   const [gameState, setGameState] = useState<GameState>(GameState.START);
 
-   const [balls, setBalls] = useState<Ball[]>([
-      {
-         id: nextBallId++,
-         position: { x: CANVAS_WIDTH / 2, y: CANVAS_HEIGHT - 50 },
-         velocity: { x: BALL_SPEED, y: -BALL_SPEED },
-         radius: BALL_RADIUS,
-      },
-   ]);
+   const ballsRef = useRef<Ball[]>([]);
+   const paddleRef = useRef<Paddle | null>(null);
+   const blocksRef = useRef<Block[]>([]);
+   const powerUpsRef = useRef<PowerUp[]>([]);
+   const bulletsRef = useRef<Bullet[]>([]);
+   const particlesRef = useRef<Particle[]>([]);
+   const keysRef = useRef<{ [key: string]: boolean }>({});
+   const powerUpManagerRef = useRef(new PowerUpManager());
+   const lastShotTimeRef = useRef<number>(0);
 
-   const [bricks, setBricks] = useState<Brick[]>(createBricks());
-   const [powerUps, setPowerUps] = useState<PowerUp[]>([]);
-   const [bullets, setBullets] = useState<Bullet[]>([]);
-
-   const [gameState, setGameState] = useState<GameState>({
-      score: 0,
-      lives: INITIAL_LIVES,
-      level: 1,
-      gameOver: false,
-      isPaused: false,
-      isStarted: false,
-   });
-
-   const keysPressed = useRef<{ [key: string]: boolean }>({});
-   const gunCooldown = useRef<number>(0);
-
-   const startGame = useCallback(() => {
-      setPaddle({
-         x: CANVAS_WIDTH / 2 - PADDLE_WIDTH / 2,
-         y: CANVAS_HEIGHT - 30,
-         width: PADDLE_WIDTH,
-         height: PADDLE_HEIGHT,
-         speed: PADDLE_SPEED,
-         hasGun: false,
-      });
-
-      nextBallId = 0;
-      setBalls([
-         {
-            id: nextBallId++,
-            position: { x: CANVAS_WIDTH / 2, y: CANVAS_HEIGHT - 50 },
-            velocity: { x: BALL_SPEED, y: -BALL_SPEED },
-            radius: BALL_RADIUS,
-         },
-      ]);
-
-      setBricks(createBricks());
-      setPowerUps([]);
-      setBullets([]);
-
-      setGameState({
-         score: 0,
-         lives: INITIAL_LIVES,
-         level: 1,
-         gameOver: false,
-         isPaused: false,
-         isStarted: true,
-      });
+   const initGame = useCallback(() => {
+      paddleRef.current = createInitialPaddle();
+      ballsRef.current = [createInitialBall()];
+      blocksRef.current = createBlocks();
+      powerUpsRef.current = [];
+      bulletsRef.current = [];
+      particlesRef.current = [];
+      powerUpManagerRef.current.clearAllTimers();
+      lastShotTimeRef.current = 0;
    }, []);
 
-   const togglePause = useCallback(() => {
-      if (!gameState.gameOver && gameState.isStarted) {
-         setGameState((prev) => ({ ...prev, isPaused: !prev.isPaused }));
-      }
-   }, [gameState.gameOver, gameState.isStarted]);
+   const applyPowerUp = useCallback((type: PowerUpType) => {
+      const paddle = paddleRef.current;
+      if (!paddle) return;
 
-   const resetBall = useCallback(() => {
-      setBalls([
-         {
-            id: nextBallId++,
-            position: { x: CANVAS_WIDTH / 2, y: CANVAS_HEIGHT - 50 },
-            velocity: {
-               x: BALL_SPEED * (Math.random() > 0.5 ? 1 : -1),
-               y: -BALL_SPEED,
-            },
-            radius: BALL_RADIUS,
-         },
-      ]);
-   }, []);
-
-   const spawnPowerUp = useCallback(
-      (x: number, y: number, type: PowerUpType) => {
-         const config = POWERUP_CONFIGS[type];
-         setPowerUps((prev) => [
-            ...prev,
-            {
-               id: nextPowerUpId++,
-               x,
-               y,
-               width: 30,
-               height: 30,
-               type,
-               velocity: 2,
-               color: config.color,
-               icon: config.icon,
-            },
-         ]);
-      },
-      []
-   );
-
-   const activatePowerUp = useCallback((type: PowerUpType) => {
-      switch (type) {
-         case "multiBall":
-            setBalls((prev) => {
-               const newBalls: Ball[] = [];
-               prev.forEach((ball) => {
-                  newBalls.push(ball);
-                  newBalls.push({
-                     id: nextBallId++,
-                     position: { ...ball.position },
-                     velocity: { x: ball.velocity.x * 1.2, y: ball.velocity.y },
-                     radius: BALL_RADIUS,
-                  });
-                  newBalls.push({
-                     id: nextBallId++,
-                     position: { ...ball.position },
-                     velocity: { x: ball.velocity.x * 0.8, y: ball.velocity.y },
-                     radius: BALL_RADIUS,
-                  });
-               });
-               return newBalls;
-            });
-            break;
-
-         case "gun":
-            setPaddle((prev) => ({ ...prev, hasGun: true }));
-            setTimeout(() => {
-               setPaddle((prev) => ({ ...prev, hasGun: false }));
-            }, 10000);
-            break;
-
-         case "expandPaddle":
-            setPaddle((prev) => ({ ...prev, width: PADDLE_WIDTH * 1.5 }));
-            setTimeout(() => {
-               setPaddle((prev) => ({ ...prev, width: PADDLE_WIDTH }));
-            }, 8000);
-            break;
-
-         case "slowBall":
-            setBalls((prev) =>
-               prev.map((ball) => ({
-                  ...ball,
-                  velocity: {
-                     x: ball.velocity.x * 0.6,
-                     y: ball.velocity.y * 0.6,
-                  },
-               }))
-            );
-            setTimeout(() => {
-               setBalls((prev) =>
-                  prev.map((ball) => ({
-                     ...ball,
-                     velocity: {
-                        x: ball.velocity.x / 0.6,
-                        y: ball.velocity.y / 0.6,
-                     },
-                  }))
-               );
-            }, 7000);
-            break;
-      }
+      powerUpManagerRef.current.applyPowerUp(
+         type,
+         paddle,
+         ballsRef.current,
+         (newBall) => {
+            ballsRef.current.push(newBall);
+         }
+      );
    }, []);
 
    const shootBullet = useCallback(() => {
-      if (paddle.hasGun && gunCooldown.current <= 0) {
-         setBullets((prev) => [
-            ...prev,
-            {
-               id: nextBulletId++,
-               x: paddle.x + paddle.width / 2 - BULLET_WIDTH / 2 - 10,
-               y: paddle.y,
-               width: BULLET_WIDTH,
-               height: BULLET_HEIGHT,
-               velocity: BULLET_SPEED,
-            },
-            {
-               id: nextBulletId++,
-               x: paddle.x + paddle.width / 2 - BULLET_WIDTH / 2 + 10,
-               y: paddle.y,
-               width: BULLET_WIDTH,
-               height: BULLET_HEIGHT,
-               velocity: BULLET_SPEED,
-            },
-         ]);
-         gunCooldown.current = 15;
+      const paddle = paddleRef.current;
+      if (!paddle || !paddle.canShoot) return;
+
+      const now = Date.now();
+      if (now - lastShotTimeRef.current < 300) return; // Ограничение скорострельности
+
+      lastShotTimeRef.current = now;
+
+      // Создаем две пули с обеих сторон платформы
+      bulletsRef.current.push(
+         {
+            x: paddle.x + paddle.width * 0.25 - 2,
+            y: paddle.y - 10,
+            width: 4,
+            height: 10,
+            dy: -8,
+         },
+         {
+            x: paddle.x + paddle.width * 0.75 - 2,
+            y: paddle.y - 10,
+            width: 4,
+            height: 10,
+            dy: -8,
+         }
+      );
+   }, []);
+
+   const updateGame = useCallback(() => {
+      if (gameState !== GameState.PLAYING) return;
+
+      const paddle = paddleRef.current;
+      if (!paddle) return;
+
+      // Управление платформой
+      if (keysRef.current["ArrowLeft"] && paddle.x > 0) {
+         paddle.x -= paddle.speed;
       }
-   }, [paddle]);
+      if (
+         keysRef.current["ArrowRight"] &&
+         paddle.x < GAME_CONFIG.CANVAS_WIDTH - paddle.width
+      ) {
+         paddle.x += paddle.speed;
+      }
 
-   const update = useCallback(() => {
-      if (gameState.gameOver || gameState.isPaused || !gameState.isStarted)
-         return;
-
-      if (gunCooldown.current > 0) gunCooldown.current--;
-
-      if (keysPressed.current[" "] && paddle.hasGun) {
+      // Стрельба
+      if (keysRef.current[" "] || keysRef.current["Space"]) {
          shootBullet();
       }
 
-      setPaddle((prev) => {
-         let newX = prev.x;
+      // Обновление мячей
+      ballsRef.current = ballsRef.current.filter((ball) => {
+         updateBallPosition(ball);
 
-         if (keysPressed.current["ArrowLeft"] && prev.x > 0) {
-            newX = prev.x - prev.speed;
-         }
-         if (
-            keysPressed.current["ArrowRight"] &&
-            prev.x < CANVAS_WIDTH - prev.width
-         ) {
-            newX = prev.x + prev.speed;
+         // Проверка столкновения с платформой
+         if (checkBallPaddleCollision(ball, paddle)) {
+            reflectBallFromPaddle(ball, paddle);
          }
 
-         return { ...prev, x: newX };
-      });
+         // Проверка на выход за нижнюю границу
+         if (isBallOutOfBounds(ball)) {
+            return false;
+         }
 
-      setBullets((prev) => {
-         return prev.filter((bullet) => {
-            bullet.y -= bullet.velocity;
-            return bullet.y > -bullet.height;
-         });
-      });
+         // Проверка столкновения с блоками
+         for (let i = blocksRef.current.length - 1; i >= 0; i--) {
+            const block = blocksRef.current[i];
+            if (checkBallBlockCollision(ball, block)) {
+               reflectBallFromBlock(ball, block);
+               block.health--;
 
-      setBullets((prevBullets) => {
-         return prevBullets.filter((bullet) => {
-            let bulletActive = true;
+               if (block.health <= 0) {
+                  setScore((prev) => prev + block.maxHealth * 10);
 
-            setBricks((prevBricks) => {
-               return prevBricks.map((brick) => {
-                  if (
-                     brick.visible &&
-                     checkBulletBrickCollision(bullet, brick)
-                  ) {
-                     brick.hits--;
-
-                     if (brick.hits <= 0) {
-                        brick.visible = false;
-                        setGameState((prevState) => ({
-                           ...prevState,
-                           score: prevState.score + brick.points,
-                        }));
-
-                        if (brick.hasPowerUp && brick.powerUpType) {
-                           spawnPowerUp(
-                              brick.x + brick.width / 2,
-                              brick.y + brick.height / 2,
-                              brick.powerUpType
-                           );
-                        }
-                     }
-
-                     bulletActive = false;
-                  }
-                  return brick;
-               });
-            });
-
-            return bulletActive;
-         });
-      });
-
-      setPowerUps((prev) => {
-         return prev.filter((powerUp) => {
-            powerUp.y += powerUp.velocity;
-
-            if (
-               powerUp.y + powerUp.height > paddle.y &&
-               powerUp.x + powerUp.width > paddle.x &&
-               powerUp.x < paddle.x + paddle.width
-            ) {
-               activatePowerUp(powerUp.type);
-               return false;
-            }
-
-            return powerUp.y < CANVAS_HEIGHT;
-         });
-      });
-
-      setBalls((prev) => {
-         const activeBalls = prev.filter((ball) => {
-            let newX = ball.position.x + ball.velocity.x;
-            let newY = ball.position.y + ball.velocity.y;
-            let newVelX = ball.velocity.x;
-            let newVelY = ball.velocity.y;
-
-            if (newX - ball.radius <= 0 || newX + ball.radius >= CANVAS_WIDTH) {
-               newVelX = -newVelX;
-            }
-            if (newY - ball.radius <= 0) {
-               newVelY = -newVelY;
-            }
-
-            if (newY + ball.radius >= CANVAS_HEIGHT) {
-               return false;
-            }
-
-            if (
-               checkBallPaddleCollision(
-                  { ...ball, position: { x: newX, y: newY } },
-                  paddle
-               )
-            ) {
-               newVelY = -Math.abs(newVelY);
-               const hitPos = (newX - paddle.x) / paddle.width;
-               newVelX = (hitPos - 0.5) * BALL_SPEED * 2;
-            }
-
-            setBricks((prevBricks) => {
-               return prevBricks.map((brick) => {
-                  if (!brick.visible) return brick;
-
-                  const collision = checkBallBrickCollision(
-                     { ...ball, position: { x: newX, y: newY } },
-                     brick
+                  // Создаем эффект разрушения
+                  const explosion = createBlockExplosion(
+                     block.x,
+                     block.y,
+                     block.width,
+                     block.height,
+                     block.color
                   );
+                  particlesRef.current.push(...explosion);
 
-                  if (!collision.hit) return brick;
-
-                  brick.hits--;
-
-                  if (brick.hits <= 0) {
-                     brick.visible = false;
-
-                     setGameState((prev) => ({
-                        ...prev,
-                        score: prev.score + brick.points,
-                     }));
-
-                     if (brick.hasPowerUp && brick.powerUpType) {
-                        spawnPowerUp(
-                           brick.x + brick.width / 2,
-                           brick.y + brick.height / 2,
-                           brick.powerUpType
-                        );
-                     }
+                  // Создание бонуса
+                  if (block.hasPowerUp && block.powerUpType) {
+                     powerUpsRef.current.push({
+                        x: block.x + block.width / 2 - 15,
+                        y: block.y,
+                        width: 30,
+                        height: 30,
+                        type: block.powerUpType,
+                        dy: 2,
+                     });
                   }
 
-                  switch (collision.side) {
-                     case "top":
-                        newVelY = -Math.abs(newVelY);
-                        newY = brick.y - ball.radius;
-                        break;
-
-                     case "bottom":
-                        newVelY = Math.abs(newVelY);
-                        newY = brick.y + brick.height + ball.radius;
-                        break;
-
-                     case "left":
-                        newVelX = -Math.abs(newVelX);
-                        newX = brick.x - ball.radius;
-                        break;
-
-                     case "right":
-                        newVelX = Math.abs(newVelX);
-                        newX = brick.x + brick.width + ball.radius;
-                        break;
-                  }
-
-                  return brick;
-               });
-            });
-
-            ball.position = { x: newX, y: newY };
-            ball.velocity = { x: newVelX, y: newVelY };
-            return true;
-         });
-
-         if (activeBalls.length === 0) {
-            setGameState((prevState) => {
-               const newLives = prevState.lives - 1;
-               if (newLives <= 0) {
-                  return { ...prevState, lives: 0, gameOver: true };
+                  blocksRef.current.splice(i, 1);
                }
-               return { ...prevState, lives: newLives };
-            });
-            resetBall();
-            return prev;
+               break;
+            }
          }
 
-         return activeBalls;
+         return true;
       });
 
-      setBricks((prevBricks) => {
-         if (prevBricks.every((brick) => !brick.visible)) {
-            setGameState((prevState) => ({
-               ...prevState,
-               level: prevState.level + 1,
-               isStarted: false,
-            }));
+      // Если все мячи потеряны
+      if (ballsRef.current.length === 0) {
+         setLives((prev) => {
+            const newLives = prev - 1;
+            if (newLives <= 0) {
+               setGameState(GameState.GAME_OVER);
+            } else {
+               ballsRef.current = [createInitialBall()];
+            }
+            return newLives;
+         });
+      }
 
-            setTimeout(() => {
-               setBricks(createBricks());
-               resetBall();
-               setPowerUps([]);
-               setBullets([]);
-               setPaddle((prev) => ({
-                  ...prev,
-                  width: PADDLE_WIDTH,
-                  hasGun: false,
-               }));
-               setGameState((prevState) => ({ ...prevState, isStarted: true }));
-            }, 1000);
+      // Обновление пуль
+      bulletsRef.current = bulletsRef.current.filter((bullet) => {
+         bullet.y += bullet.dy;
+
+         // Проверка столкновения с блоками
+         for (let i = blocksRef.current.length - 1; i >= 0; i--) {
+            const block = blocksRef.current[i];
+            if (checkBulletBlockCollision(bullet, block)) {
+               block.health--;
+
+               if (block.health <= 0) {
+                  setScore((prev) => prev + block.maxHealth * 10);
+
+                  // Создаем эффект разрушения
+                  const explosion = createBlockExplosion(
+                     block.x,
+                     block.y,
+                     block.width,
+                     block.height,
+                     block.color
+                  );
+                  particlesRef.current.push(...explosion);
+
+                  // Создание бонуса
+                  if (block.hasPowerUp && block.powerUpType) {
+                     powerUpsRef.current.push({
+                        x: block.x + block.width / 2 - 15,
+                        y: block.y,
+                        width: 30,
+                        height: 30,
+                        type: block.powerUpType,
+                        dy: 2,
+                     });
+                  }
+
+                  blocksRef.current.splice(i, 1);
+               }
+
+               return false; // Удаляем пулю
+            }
          }
-         return prevBricks;
+
+         // Удаление пули если она вышла за экран
+         return bullet.y > 0;
       });
-   }, [
-      gameState,
-      paddle,
-      resetBall,
-      spawnPowerUp,
-      activatePowerUp,
-      shootBullet,
-   ]);
+
+      // Обновление частиц
+      particlesRef.current = updateParticles(particlesRef.current);
+
+      // Обновление бонусов
+      powerUpsRef.current = powerUpsRef.current.filter((powerUp) => {
+         powerUp.y += powerUp.dy;
+
+         // Проверка поймал ли игрок бонус
+         if (
+            checkPowerUpPaddleCollision(
+               powerUp.x,
+               powerUp.y,
+               powerUp.width,
+               powerUp.height,
+               paddle
+            )
+         ) {
+            applyPowerUp(powerUp.type);
+            return false;
+         }
+
+         // Удаление бонуса если он вышел за экран
+         return powerUp.y < GAME_CONFIG.CANVAS_HEIGHT;
+      });
+
+      // Проверка победы
+      if (blocksRef.current.length === 0) {
+         setGameState(GameState.WON);
+      }
+   }, [gameState, applyPowerUp, shootBullet]);
+
+   const handleKeyDown = useCallback(
+      (key: string) => {
+         keysRef.current[key] = true;
+
+         if (key === " " && gameState === GameState.START) {
+            setGameState(GameState.PLAYING);
+         }
+         if (key === "p" || key === "P") {
+            setGameState((prev) =>
+               prev === GameState.PLAYING
+                  ? GameState.PAUSED
+                  : prev === GameState.PAUSED
+                  ? GameState.PLAYING
+                  : prev
+            );
+         }
+      },
+      [gameState]
+   );
+
+   const handleKeyUp = useCallback((key: string) => {
+      keysRef.current[key] = false;
+   }, []);
+
+   const startGame = useCallback(() => {
+      initGame();
+      setScore(0);
+      setLives(3);
+      setGameState(GameState.PLAYING);
+   }, [initGame]);
+
+   const restartGame = useCallback(() => {
+      initGame();
+      setScore(0);
+      setLives(3);
+      setGameState(GameState.PLAYING);
+   }, [initGame]);
 
    return {
-      paddle,
-      balls,
-      bricks,
-      powerUps,
-      bullets,
+      score,
+      lives,
       gameState,
+      ballsRef,
+      paddleRef,
+      blocksRef,
+      powerUpsRef,
+      bulletsRef,
+      particlesRef,
+      updateGame,
+      handleKeyDown,
+      handleKeyUp,
       startGame,
-      togglePause,
-      update,
-      keysPressed,
+      restartGame,
+      initGame,
    };
 };
