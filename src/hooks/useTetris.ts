@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import type {
    Board,
    Tetromino,
@@ -57,16 +57,29 @@ export const useTetris = () => {
       [board]
    );
 
-   const mergePieceToBoard = useCallback(() => {
+   const ghostPosition = useMemo((): Position => {
+      if (!currentPiece) return position;
+
+      let ghostY = position.y;
+
+      while (!isCollision(currentPiece, { x: position.x, y: ghostY + 1 })) {
+         ghostY++;
+      }
+
+      return { x: position.x, y: ghostY };
+   }, [currentPiece, position, isCollision]);
+
+   const mergePieceToBoard = useCallback((mergePosition?: Position) => {
       if (!currentPiece) return;
 
+      const posToUse = mergePosition || position;
       const newBoard = board.map((row) => row.map((cell) => ({ ...cell })));
 
       for (let y = 0; y < currentPiece.shape.length; y++) {
          for (let x = 0; x < currentPiece.shape[y].length; x++) {
             if (currentPiece.shape[y][x]) {
-               const boardY = position.y + y;
-               const boardX = position.x + x;
+               const boardY = posToUse.y + y;
+               const boardX = posToUse.x + x;
                if (
                   boardY >= 0 &&
                   boardY < BOARD_HEIGHT &&
@@ -163,19 +176,16 @@ export const useTetris = () => {
    const drop = useCallback(() => {
       if (!currentPiece || isPaused) return;
     
-      setPosition((prevPos) => {
-        const newPos = { ...prevPos };
+      let dropY = position.y;
+      while (!isCollision(currentPiece, { x: position.x, y: dropY + 1 })) {
+         dropY++;
+      }
     
-        while (!isCollision(currentPiece, { x: newPos.x, y: newPos.y + 1 })) {
-          newPos.y++;
-        }
-    
-        return newPos;
-      });
-    
-      // Дать React обновить позицию перед merge
-      setTimeout(() => mergePieceToBoard(), 10);
-    }, [currentPiece, isCollision, mergePieceToBoard, isPaused]);
+      const finalPosition = { x: position.x, y: dropY };
+      
+      setPosition(finalPosition);
+      mergePieceToBoard(finalPosition);
+   }, [currentPiece, position, isCollision, mergePieceToBoard, isPaused]);
     
     
    const startGame = useCallback(() => {
@@ -201,6 +211,7 @@ export const useTetris = () => {
       currentPiece,
       nextPiece,
       position,
+      ghostPosition,
       score,
       level,
       lines,

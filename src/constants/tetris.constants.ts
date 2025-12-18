@@ -4,7 +4,7 @@ export const TETROMINOES: Record<string, TetrominoShape> = {
    I: {
       shape: [[1, 1, 1, 1]],
       color: "bg-cyan-500",
-      shadow: "shadow-cyan-500/50",
+      shadow: "shadow-cyan-300",
    },
    O: {
       shape: [

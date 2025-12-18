@@ -47,7 +47,7 @@ export default function ArkanoidPage() {
    }, [update]);
 
    return (
-      <div className="min-h-screen w-full bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100 flex items-center justify-center p-8">
+      <div className="min-h-screen w-full bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100 flex items-center justify-center pl-60 p-8">
          <div className="flex gap-8 items-start">
             <div className="relative">
                <Arkanoid paddle={paddle} balls={balls} bricks={bricks} powerUps={powerUps} bullets={bullets} />

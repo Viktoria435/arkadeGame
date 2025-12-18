@@ -9,9 +9,9 @@ interface ControlsProps {
 
 export const Controls: React.FC<ControlsProps> = ({ onPause, isPaused }) => (
   <div className="flex flex-col gap-4">
-    <div className="bg-black/40 backdrop-blur-xl rounded-2xl p-6 border border-white/20 shadow-xl">
-      <h3 className="text-cyan-400 text-sm font-bold mb-4 uppercase tracking-wider">Управление</h3>
-      <div className="space-y-3 text-sm text-gray-300">
+    <div className="bg-blue/40 backdrop-blur-xl rounded-2xl p-6 border border-white/20 shadow-xl">
+      <h3 className="text-cyan-200 text-sm font-bold mb-4 uppercase tracking-wider">Управление</h3>
+      <div className="space-y-3 text-sm text-cyan-200">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-purple-600/30 border border-purple-500 rounded flex items-center justify-center font-bold text-purple-400">←→</div>
           <span>Движение</span>
@@ -24,10 +24,10 @@ export const Controls: React.FC<ControlsProps> = ({ onPause, isPaused }) => (
           <div className="w-10 h-10 bg-cyan-600/30 border border-cyan-500 rounded flex items-center justify-center font-bold text-cyan-400">↓</div>
           <span>Ускорение</span>
         </div>
-        {/* <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-orange-600/30 border border-orange-500 rounded flex items-center justify-center font-bold text-orange-400 text-xs">SPC</div>
           <span>Сброс</span>
-        </div> */}
+        </div>
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-yellow-600/30 border border-yellow-500 rounded flex items-center justify-center font-bold text-yellow-400 text-xs">P</div>
           <span>Пауза</span>

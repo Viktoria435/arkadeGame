@@ -14,6 +14,7 @@ export default function TetrisPage() {
       currentPiece,
       nextPiece,
       position,
+      ghostPosition,
       score,
       level,
       lines,
@@ -68,10 +69,10 @@ export default function TetrisPage() {
                e.preventDefault();
                rotate();
                break;
-            // case " ":
-            //    e.preventDefault();
-            //    drop();
-            //    break;
+            case " ":
+               e.preventDefault();
+               drop();
+               break;
             case "P":
                e.preventDefault();
                togglePause();
@@ -113,6 +114,7 @@ export default function TetrisPage() {
                   board={board}
                   currentPiece={currentPiece}
                   position={position}
+                  ghostPosition={ghostPosition}
                />
 
                <Controls onPause={togglePause} isPaused={isPaused} />
@@ -124,7 +126,7 @@ export default function TetrisPage() {
                            ПАУЗА
                         </h2>
                         <p className="text-gray-300">
-                           Нажмите P или кнопку &quot;Продолжить&quot;
+                           Нажмите кнопку P
                         </p>
                      </div>
                   </div>
