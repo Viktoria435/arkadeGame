@@ -1,7 +1,6 @@
 import { Block as BlockType } from "@/types/arkanoid.types";
 import { POWER_UP_ICONS } from "@/constants/arkanoid.constants";
 
-// Функция для рисования закругленного прямоугольника
 const drawRoundedRect = (
    ctx: CanvasRenderingContext2D,
    x: number,
@@ -23,7 +22,6 @@ const drawRoundedRect = (
    ctx.closePath();
 };
 
-// Функция для рисования трещин
 const drawCracks = (
    ctx: CanvasRenderingContext2D,
    x: number,
@@ -43,7 +41,6 @@ const drawCracks = (
    const centerY = y + height / 2;
 
    if (healthPercent <= 0.66 && healthPercent > 0.33) {
-      // Легкие трещины (2 HP из 3)
       ctx.beginPath();
       ctx.moveTo(centerX - 10, centerY - 5);
       ctx.lineTo(centerX + 8, centerY - 3);
@@ -55,31 +52,24 @@ const drawCracks = (
       ctx.lineTo(centerX + 5, centerY + 2);
       ctx.stroke();
    } else if (healthPercent <= 0.33) {
-      // Сильные трещины (1 HP из 3)
-      // Трещина 1
       ctx.beginPath();
       ctx.moveTo(centerX - 15, centerY - 8);
       ctx.lineTo(centerX, centerY - 5);
       ctx.lineTo(centerX + 12, centerY - 2);
       ctx.lineTo(centerX + 18, centerY + 6);
       ctx.stroke();
-
-      // Трещина 2
       ctx.beginPath();
       ctx.moveTo(centerX - 12, centerY);
       ctx.lineTo(centerX - 5, centerY + 3);
       ctx.lineTo(centerX + 8, centerY + 5);
       ctx.lineTo(centerX + 15, centerY + 8);
       ctx.stroke();
-
-      // Трещина 3
       ctx.beginPath();
       ctx.moveTo(centerX - 8, centerY + 6);
       ctx.lineTo(centerX - 2, centerY + 2);
       ctx.lineTo(centerX + 5, centerY - 3);
       ctx.stroke();
 
-      // Эффект молнии ⚡
       ctx.font = "bold 14px Arial";
       ctx.fillStyle = "rgba(255, 215, 0, 0.8)";
       ctx.textAlign = "center";
@@ -97,17 +87,14 @@ export const renderBlocks = (
 ) => {
    blocks.forEach((block) => {
       const opacity = block.health / block.maxHealth;
-      const radius = 6; // Радиус закругления углов
+      const radius = 6;
 
-      // Создаем градиент для блока
       const gradient = ctx.createLinearGradient(
          block.x,
          block.y,
          block.x,
          block.y + block.height
       );
-
-      // Цвет блока с учетом здоровья
       const baseColor = block.color;
       gradient.addColorStop(0, baseColor);
       gradient.addColorStop(1, adjustBrightness(baseColor, -20));
@@ -115,11 +102,8 @@ export const renderBlocks = (
       ctx.fillStyle = gradient;
       ctx.globalAlpha = 0.3 + opacity * 0.7;
 
-      // Рисуем закругленный блок
       drawRoundedRect(ctx, block.x, block.y, block.width, block.height, radius);
       ctx.fill();
-
-      // Внутренняя подсветка
       ctx.globalAlpha = 0.3;
       ctx.fillStyle = "rgba(255, 255, 255, 0.3)";
       drawRoundedRect(
@@ -132,14 +116,12 @@ export const renderBlocks = (
       );
       ctx.fill();
 
-      // Рамка
       ctx.strokeStyle = "#ffffff";
       ctx.lineWidth = 2;
       ctx.globalAlpha = 1;
       drawRoundedRect(ctx, block.x, block.y, block.width, block.height, radius);
       ctx.stroke();
 
-      // Трещины при низком HP
       if (block.health < block.maxHealth) {
          drawCracks(
             ctx,
@@ -151,8 +133,6 @@ export const renderBlocks = (
             block.maxHealth
          );
       }
-
-      // Индикатор здоровья
       if (block.maxHealth > 1) {
          ctx.fillStyle = "#ffffff";
          ctx.font = "bold 16px Arial";
@@ -167,7 +147,6 @@ export const renderBlocks = (
          ctx.shadowBlur = 0;
       }
 
-      // Иконка бонуса
       if (block.hasPowerUp && block.powerUpType) {
          ctx.font = "12px Arial";
          ctx.fillStyle = "#ffffff";
@@ -185,7 +164,6 @@ export const renderBlocks = (
    ctx.globalAlpha = 1;
 };
 
-// Вспомогательная функция для изменения яркости цвета
 const adjustBrightness = (color: string, amount: number): string => {
    const hex = color.replace("#", "");
    const r = Math.max(

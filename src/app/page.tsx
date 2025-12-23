@@ -56,36 +56,22 @@ const ArcadeGamesHome = () => {
          players: "1",
          bestScore: "15,680",
       },
+      {
+         id: "race",
+         title: "Race",
+         description: "Гонки",
+         color: "from-red-500 to-orange-600",
+         bgColor: "bg-red-500/10",
+         borderColor: "border-red-500/50",
+         icon: "🏎️",
+         difficulty: "Средняя",
+         players: "2",
+         bestScore: "10,000",
+      },
    ];
 
    return (
       <div className="min-h-screen w-full bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100 relative overflow-hidden">
-         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            {[...Array(30)].map((_, i) => (
-               <div
-                  key={i}
-                  className="absolute rounded-full mix-blend-multiply"
-                  style={{
-                     left: `${Math.random() * 100}%`,
-                     top: `${Math.random() * 100}%`,
-                     width: `${Math.random() * 300 + 50}px`,
-                     height: `${Math.random() * 300 + 50}px`,
-                     background: `radial-gradient(circle, ${
-                        [
-                           "rgba(147, 197, 253, 0.15)",
-                           "rgba(216, 180, 254, 0.15)",
-                           "rgba(251, 207, 232, 0.15)",
-                        ][Math.floor(Math.random() * 3)]
-                     }, transparent)`,
-                     animation: `float ${
-                        Math.random() * 10 + 10
-                     }s ease-in-out infinite`,
-                     animationDelay: `${Math.random() * 5}s`,
-                  }}
-               />
-            ))}
-         </div>
-
          <div
             className="absolute inset-0 opacity-5 pointer-events-none"
             style={{
@@ -138,7 +124,7 @@ const ArcadeGamesHome = () => {
                </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 mb-12">
                {games.map((game) => (
                   <div
                      key={game.id}
@@ -166,25 +152,9 @@ const ArcadeGamesHome = () => {
                         <div
                            className={`relative h-64 bg-gradient-to-br ${game.color} flex items-center justify-center overflow-hidden`}
                         >
-                                 <div className="text-9xl transform transition-transform duration-500 group-hover:scale-125 group-hover:rotate-12">
-                                    {game.icon}
-                                 </div>
-                                 <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                                    {[...Array(8)].map((_, i) => (
-                                       <div
-                                          key={i}
-                                          className="absolute w-2 h-2 bg-white rounded-full animate-ping"
-                                          style={{
-                                             left: `${Math.random() * 100}%`,
-                                             top: `${Math.random() * 100}%`,
-                                             animationDelay: `${
-                                                Math.random() * 2
-                                             }s`,
-                                             animationDuration: "2s",
-                                          }}
-                                       />
-                                    ))}
-                                 </div>
+                           <div className="text-9xl transform transition-transform duration-500 group-hover:scale-125 group-hover:rotate-12">
+                              {game.icon}
+                           </div>
                         </div>
 
                         <div className="relative p-6 bg-white/60 backdrop-blur-sm">
@@ -202,32 +172,32 @@ const ArcadeGamesHome = () => {
                                     {game.difficulty}
                                  </p>
                               </div>
-                              {/* <div className="bg-white/70 rounded-lg p-2 text-center border border-gray-200">
-                                 <p className="text-gray-500">Игроков</p>
-                                 <p className="text-gray-800 font-bold">
-                                    {game.players}
-                                 </p>
-                              </div> */}
                               <div className="bg-white/70 rounded-lg p-2 text-center border border-gray-200">
                                  <p className="text-gray-500">Рекорд</p>
                                  <p className="text-gray-800 font-bold">
                                     {game.bestScore}
                                  </p>
                               </div>
+                              <div className="bg-white/70 rounded-lg p-2 text-center border border-gray-200">
+                                 <p className="text-gray-500">Игроки</p>
+                                 <p className="text-gray-800 font-bold">
+                                    {game.players}
+                                 </p>
+                              </div>
                            </div>
 
-                              <button
-                                 onClick={() => router.push(`/${game.id}`)}
-                                 className={`
+                           <button
+                              onClick={() => router.push(`/${game.id}`)}
+                              className={`
                       w-full mt-4 py-3 rounded-xl font-bold text-white
                       bg-gradient-to-r ${game.color}
                       transform transition-all duration-300
                       hover:shadow-lg hover:scale-105
                       active:scale-95
                     `}
-                              >
-                                 ИГРАТЬ
-                              </button>
+                           >
+                              ИГРАТЬ
+                           </button>
                         </div>
                      </div>
                   </div>
@@ -242,9 +212,6 @@ const ArcadeGamesHome = () => {
                   <button className="px-6 py-3 bg-pink-200 hover:bg-pink-300 border border-pink-300 text-pink-700 rounded-xl font-semibold transition-all duration-300 hover:scale-105">
                      Достижения
                   </button>
-                  {/* <button className="px-6 py-3 bg-cyan-200 hover:bg-cyan-300 border border-cyan-300 text-cyan-700 rounded-xl font-semibold transition-all duration-300 hover:scale-105">
-                     Настройки
-                  </button> */}
                </div>
             </div>
          </div>

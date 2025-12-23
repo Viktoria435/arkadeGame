@@ -12,11 +12,8 @@ import {
    JUMP,
    PIPE_SPAWN_DISTANCE,
    INITIAL_SPEED,
-   SKY_COLOR,
 } from "@/config/bird.config";
 import { useEffect, useRef, useState } from "react";
-
-type GameMode = "keyboard" | "voice" | null;
 
 export default function useFlappyBird() {
    const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -30,11 +27,8 @@ export default function useFlappyBird() {
    const [score, setScore] = useState(0);
    const [level, setLevel] = useState(1);
 
-   const [gameMode, setGameMode] = useState<GameMode>(null);
-   const [gameStarted, setGameStarted] = useState(false);
+   const gameStarted = true;
    const [gameOver, setGameOver] = useState(false);
-   const [isListening, setIsListening] = useState(false);
-   const [volumeLevel, setVolumeLevel] = useState(0);
 
    const speed = useRef(INITIAL_SPEED);
 
@@ -42,121 +36,160 @@ export default function useFlappyBird() {
    const imagesLoadedCount = useRef(0);
    const imageLoaded = useRef(false);
 
-   const audioContextRef = useRef<AudioContext | null>(null);
-   const analyserRef = useRef<AnalyserNode | null>(null);
-   const microphoneRef = useRef<MediaStreamAudioSourceNode | null>(null);
-   const dataArrayRef = useRef<Uint8Array | null>(null);
-   const streamRef = useRef<MediaStream | null>(null);
-
-   const startVoiceControl = async () => {
-      try {
-         const stream = await navigator.mediaDevices.getUserMedia({
-            audio: true,
-         });
-         streamRef.current = stream;
-
-         const audioContext = new AudioContext();
-         audioContextRef.current = audioContext;
-
-         const analyser = audioContext.createAnalyser();
-         analyser.fftSize = 256;
-         analyserRef.current = analyser;
-
-         const microphone = audioContext.createMediaStreamSource(stream);
-         microphoneRef.current = microphone;
-         microphone.connect(analyser);
-
-         const bufferLength = analyser.frequencyBinCount;
-         const dataArray = new Uint8Array(bufferLength);
-         dataArrayRef.current = dataArray;
-
-         setIsListening(true);
-      } catch (error) {
-         console.error("Ошибка доступа к микрофону:", error);
-         alert("Не удалось получить доступ к микрофону");
-      }
-   };
-
-   const stopVoiceControl = async () => {
-      if (streamRef.current) {
-         streamRef.current.getTracks().forEach((track) => track.stop());
-         streamRef.current = null;
-      }
-
-      if (audioContextRef.current) {
-         try {
-            if (audioContextRef.current.state !== "closed") {
-               await audioContextRef.current.close();
-            }
-         } catch (error) {
-            console.warn("Ошибка при закрытии AudioContext:", error);
-         }
-         audioContextRef.current = null;
-      }
-
-      setIsListening(false);
-   };
-
-   useEffect(() => {
-      if (!isListening || !analyserRef.current) return;
-
-      let smoothedVolume = 0;
-
-      const checkVolume = () => {
-         if (!analyserRef.current || gameOver) return;
-
-         const analyser = analyserRef.current;
-         const dataArray = new Uint8Array(analyser.frequencyBinCount);
-         analyser.getByteFrequencyData(dataArray);
-
-         let sum = 0;
-         for (let i = 0; i < dataArray.length; i++) sum += dataArray[i];
-         const normalized = sum / dataArray.length / 255;
-
-         smoothedVolume = smoothedVolume * 0.7 + normalized * 0.3;
-         setVolumeLevel(smoothedVolume * 100);
-
-         if (gameMode === "voice" && gameStarted && !gameOver) {
-            const threshold = 0.04;
-            const baseLift = -4;
-            const maxLift = -9;
-
-            if (smoothedVolume > threshold) {
-               const t = Math.min(
-                  (smoothedVolume - threshold) / (1 - threshold),
-                  1
-               );
-               const liftPower = baseLift + t * (maxLift - baseLift);
-               velocity.current = velocity.current * 0.5 + liftPower * 0.5;
-            } else {
-               if (velocity.current < 0) {
-                  velocity.current += GRAVITY * 0.02;
-               } else {
-                  velocity.current += GRAVITY * 0.05;
-               }
-            }
-         }
-
-         requestAnimationFrame(checkVolume);
-      };
-
-      checkVolume();
-   }, [isListening, gameMode, gameStarted, gameOver]);
-
-   const resetGame = () => {
-      birdY.current = PIPE_SPAWN_DISTANCE;
-      velocity.current = 0;
-      pipes.current = [];
-      setScore(0);
-      setLevel(1);
-      speed.current = INITIAL_SPEED;
-      frame.current = 0;
-      setGameOver(false);
-   };
+   const backgroundImg = useRef<HTMLImageElement | null>(null);
+   const groundImg = useRef<HTMLImageElement | null>(null);
+   const backgroundLoaded = useRef(false);
+   const groundLoaded = useRef(false);
 
    const spawnPipe = (canvasWidth: number) => {
       const top = Math.random() * 250 + 30;
       pipes.current.push({ x: canvasWidth, top });
+   };
+
+   const createBackgroundImage = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = 400;
+      canvas.height = 600;
+      const ctx = canvas.getContext("2d");
+
+      if (!ctx) return null;
+
+      const skyGradient = ctx.createLinearGradient(0, 0, 0, 300);
+      skyGradient.addColorStop(0, "#87CEEB");
+      skyGradient.addColorStop(1, "#E0F6FF");
+
+      ctx.fillStyle = skyGradient;
+      ctx.fillRect(0, 0, 400, 600);
+
+      ctx.fillStyle = "#FFD700";
+      ctx.beginPath();
+      ctx.arc(350, 80, 30, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
+      ctx.beginPath();
+      ctx.arc(80, 100, 25, 0, Math.PI * 2);
+      ctx.arc(100, 90, 30, 0, Math.PI * 2);
+      ctx.arc(130, 100, 25, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.arc(250, 70, 20, 0, Math.PI * 2);
+      ctx.arc(270, 65, 25, 0, Math.PI * 2);
+      ctx.arc(290, 70, 20, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.arc(180, 120, 15, 0, Math.PI * 2);
+      ctx.arc(195, 115, 20, 0, Math.PI * 2);
+      ctx.arc(210, 120, 15, 0, Math.PI * 2);
+      ctx.fill();
+
+      const treePositions = [50, 120, 200, 280, 350];
+
+      treePositions.forEach((x) => {
+         const treeHeight = 80 + Math.random() * 40;
+         const trunkWidth = 8 + Math.random() * 6;
+
+         ctx.fillStyle = "#8B4513";
+         ctx.fillRect(
+            x - trunkWidth / 2,
+            600 - treeHeight,
+            trunkWidth,
+            treeHeight
+         );
+
+         ctx.strokeStyle = "#654321";
+         ctx.lineWidth = 1;
+         for (let line = 0; line < trunkWidth; line += 3) {
+            ctx.beginPath();
+            ctx.moveTo(x - trunkWidth / 2 + line, 600 - treeHeight);
+            ctx.lineTo(x - trunkWidth / 2 + line, 600);
+            ctx.stroke();
+         }
+
+         const crownY = 600 - treeHeight - 15;
+         const crownRadius = 20 + Math.random() * 15;
+         ctx.fillStyle = "#228B22";
+         ctx.beginPath();
+         ctx.ellipse(
+            x,
+            crownY,
+            crownRadius,
+            crownRadius * 0.7,
+            0,
+            0,
+            Math.PI * 2
+         );
+         ctx.fill();
+
+         ctx.fillStyle = "#32CD32";
+         ctx.beginPath();
+         ctx.ellipse(
+            x - crownRadius * 0.3,
+            crownY - crownRadius * 0.2,
+            crownRadius * 0.6,
+            crownRadius * 0.4,
+            -0.3,
+            0,
+            Math.PI * 2
+         );
+         ctx.fill();
+
+         ctx.beginPath();
+         ctx.ellipse(
+            x + crownRadius * 0.3,
+            crownY - crownRadius * 0.2,
+            crownRadius * 0.6,
+            crownRadius * 0.4,
+            0.3,
+            0,
+            Math.PI * 2
+         );
+         ctx.fill();
+
+         ctx.strokeStyle = "#228B22";
+         ctx.lineWidth = 2;
+         ctx.beginPath();
+         ctx.moveTo(x - trunkWidth / 2, 600 - treeHeight * 0.7);
+         ctx.lineTo(x - crownRadius * 0.5, crownY + crownRadius * 0.3);
+         ctx.moveTo(x + trunkWidth / 2, 600 - treeHeight * 0.6);
+         ctx.lineTo(x + crownRadius * 0.4, crownY + crownRadius * 0.4);
+         ctx.stroke();
+      });
+
+      const img = new Image();
+      img.src = canvas.toDataURL();
+      return img;
+   };
+
+   const createGroundImage = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = 400;
+      canvas.height = 50;
+      const ctx = canvas.getContext("2d");
+
+      if (!ctx) return null;
+
+      const groundGradient = ctx.createLinearGradient(0, 0, 0, 50);
+      groundGradient.addColorStop(0, "#8B4513");
+      groundGradient.addColorStop(1, "#654321");
+
+      ctx.fillStyle = groundGradient;
+      ctx.fillRect(0, 20, 400, 30);
+
+      ctx.fillStyle = "#228B22";
+      ctx.fillRect(0, 15, 400, 10);
+
+      ctx.fillStyle = "#32CD32";
+      for (let i = 0; i < 400; i += 8) {
+         const height = Math.random() * 5 + 3;
+         ctx.fillRect(i, 15 - height, 2, height);
+      }
+
+      const img = new Image();
+      img.src = canvas.toDataURL();
+      return img;
    };
 
    const animate = () => {
@@ -166,8 +199,21 @@ export default function useFlappyBird() {
       const ctx = canvas.getContext("2d");
       if (!ctx) return;
 
-      ctx.fillStyle = SKY_COLOR;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      if (backgroundLoaded.current && backgroundImg.current) {
+         ctx.drawImage(
+            backgroundImg.current,
+            0,
+            0,
+            canvas.width,
+            canvas.height
+         );
+      } else {
+         const skyGradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+         skyGradient.addColorStop(0, "#87CEEB");
+         skyGradient.addColorStop(1, "#E0F6FF");
+         ctx.fillStyle = skyGradient;
+         ctx.fillRect(0, 0, canvas.width, canvas.height);
+      }
 
       velocity.current += GRAVITY;
       birdY.current += velocity.current;
@@ -189,10 +235,10 @@ export default function useFlappyBird() {
          const spriteFrame = Math.floor((frame.current / 6) % 3);
          ctx.drawImage(
             birdImgs.current[spriteFrame],
-            BIRD_X - 17,
+            BIRD_X - 20,
             birdY.current - BIRD_RADIUS,
-            34,
-            24
+            40,
+            28
          );
       } else {
          ctx.fillStyle = "#FFD700";
@@ -300,6 +346,21 @@ export default function useFlappyBird() {
       });
       pipes.current = pipes.current.filter((p) => p.x + PIPE_WIDTH > 0);
 
+      if (groundLoaded.current && groundImg.current) {
+         ctx.drawImage(
+            groundImg.current,
+            0,
+            canvas.height - 50,
+            canvas.width,
+            50
+         );
+      } else {
+         ctx.fillStyle = "#8B4513";
+         ctx.fillRect(0, canvas.height - 50, canvas.width, 50);
+         ctx.fillStyle = "#228B22";
+         ctx.fillRect(0, canvas.height - 50, canvas.width, 10);
+      }
+
       for (const pipe of pipes.current) {
          const inPipeX =
             BIRD_X + BIRD_RADIUS > pipe.x &&
@@ -310,9 +371,6 @@ export default function useFlappyBird() {
 
          if (inPipeX && (hitTop || hitBottom)) {
             setGameOver(true);
-            if (gameMode === "voice") {
-               stopVoiceControl();
-            }
             return;
          }
 
@@ -328,9 +386,6 @@ export default function useFlappyBird() {
 
       if (birdY.current > canvas.height || birdY.current < 0) {
          setGameOver(true);
-         if (gameMode === "voice") {
-            stopVoiceControl();
-         }
          return;
       }
 
@@ -341,61 +396,55 @@ export default function useFlappyBird() {
       imagesLoadedCount.current = 0;
       birdImgs.current = [];
 
+      backgroundImg.current = createBackgroundImage();
+      if (backgroundImg.current) {
+         backgroundImg.current.onload = () => {
+            backgroundLoaded.current = true;
+         };
+      }
+
+      groundImg.current = createGroundImage();
+      if (groundImg.current) {
+         groundImg.current.onload = () => {
+            groundLoaded.current = true;
+         };
+      }
+
       BIRD_IMAGE_URLS.forEach((url: string, i: number) => {
          const img = new Image();
          img.onload = async () => {
             imagesLoadedCount.current++;
-            if (
-               imagesLoadedCount.current === BIRD_IMAGE_URLS.length &&
-               gameStarted
-            ) {
+            if (imagesLoadedCount.current === BIRD_IMAGE_URLS.length) {
                imageLoaded.current = true;
-               if (gameMode === "voice") {
-                  await startVoiceControl();
-               }
                animate();
             }
          };
          img.src = url;
          birdImgs.current[i] = img;
       });
-   }, [gameStarted, gameMode]);
+   }, []);
 
    useEffect(() => {
       const jump = () => {
-         if (!gameOver && gameMode === "keyboard") {
+         if (!gameOver) {
             velocity.current = JUMP;
          }
       };
 
-      if (gameMode === "keyboard") {
-         window.addEventListener("mousedown", jump);
-         window.addEventListener("keydown", jump);
-      }
+      window.addEventListener("mousedown", jump);
+      window.addEventListener("keydown", jump);
 
       return () => {
-         if (gameMode === "keyboard") {
-            window.removeEventListener("mousedown", jump);
-            window.removeEventListener("keydown", jump);
-         }
+         window.removeEventListener("mousedown", jump);
+         window.removeEventListener("keydown", jump);
       };
-   }, [gameMode, gameOver]);
-
-   const handleStartGame = async (mode: GameMode) => {
-      setGameMode(mode);
-      setGameStarted(true);
-      resetGame();
-   };
+   }, [gameOver]);
 
    return {
       canvasRef,
       score,
       level,
       gameOver,
-      gameMode,
       gameStarted,
-      isListening,
-      volumeLevel,
-      handleStartGame,
    };
 }

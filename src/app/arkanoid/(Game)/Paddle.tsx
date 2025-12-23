@@ -11,7 +11,6 @@ export const renderPaddle = (
       paddle.y + paddle.height
    );
 
-   // Если платформа может стрелять, делаем её красной
    if (paddle.canShoot) {
       gradient.addColorStop(0, "#f87171");
       gradient.addColorStop(1, "#ef4444");
@@ -27,14 +26,10 @@ export const renderPaddle = (
    ctx.lineWidth = 2;
    ctx.strokeRect(paddle.x, paddle.y, paddle.width, paddle.height);
 
-   // Если может стрелять, добавляем индикаторы пушек
    if (paddle.canShoot) {
       ctx.fillStyle = "#fef3c7";
 
-      // Левая пушка
       ctx.fillRect(paddle.x + paddle.width * 0.25 - 3, paddle.y - 5, 6, 5);
-
-      // Правая пушка
       ctx.fillRect(paddle.x + paddle.width * 0.75 - 3, paddle.y - 5, 6, 5);
    }
 };

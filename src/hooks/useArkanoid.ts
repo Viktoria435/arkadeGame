@@ -77,11 +77,9 @@ export const useArkanoid = () => {
       if (!paddle || !paddle.canShoot) return;
 
       const now = Date.now();
-      if (now - lastShotTimeRef.current < 300) return; // Ограничение скорострельности
+      if (now - lastShotTimeRef.current < 300) return;
 
       lastShotTimeRef.current = now;
-
-      // Создаем две пули с обеих сторон платформы
       bulletsRef.current.push(
          {
             x: paddle.x + paddle.width * 0.25 - 2,
@@ -106,7 +104,6 @@ export const useArkanoid = () => {
       const paddle = paddleRef.current;
       if (!paddle) return;
 
-      // Управление платформой
       if (keysRef.current["ArrowLeft"] && paddle.x > 0) {
          paddle.x -= paddle.speed;
       }
@@ -117,26 +114,21 @@ export const useArkanoid = () => {
          paddle.x += paddle.speed;
       }
 
-      // Стрельба
       if (keysRef.current[" "] || keysRef.current["Space"]) {
          shootBullet();
       }
 
-      // Обновление мячей
       ballsRef.current = ballsRef.current.filter((ball) => {
          updateBallPosition(ball);
 
-         // Проверка столкновения с платформой
          if (checkBallPaddleCollision(ball, paddle)) {
             reflectBallFromPaddle(ball, paddle);
          }
 
-         // Проверка на выход за нижнюю границу
          if (isBallOutOfBounds(ball)) {
             return false;
          }
 
-         // Проверка столкновения с блоками
          for (let i = blocksRef.current.length - 1; i >= 0; i--) {
             const block = blocksRef.current[i];
             if (checkBallBlockCollision(ball, block)) {
@@ -146,7 +138,6 @@ export const useArkanoid = () => {
                if (block.health <= 0) {
                   setScore((prev) => prev + block.maxHealth * 10);
 
-                  // Создаем эффект разрушения
                   const explosion = createBlockExplosion(
                      block.x,
                      block.y,
@@ -156,7 +147,6 @@ export const useArkanoid = () => {
                   );
                   particlesRef.current.push(...explosion);
 
-                  // Создание бонуса
                   if (block.hasPowerUp && block.powerUpType) {
                      powerUpsRef.current.push({
                         x: block.x + block.width / 2 - 15,
@@ -177,7 +167,6 @@ export const useArkanoid = () => {
          return true;
       });
 
-      // Если все мячи потеряны
       if (ballsRef.current.length === 0) {
          setLives((prev) => {
             const newLives = prev - 1;
@@ -190,11 +179,8 @@ export const useArkanoid = () => {
          });
       }
 
-      // Обновление пуль
       bulletsRef.current = bulletsRef.current.filter((bullet) => {
          bullet.y += bullet.dy;
-
-         // Проверка столкновения с блоками
          for (let i = blocksRef.current.length - 1; i >= 0; i--) {
             const block = blocksRef.current[i];
             if (checkBulletBlockCollision(bullet, block)) {
@@ -203,7 +189,6 @@ export const useArkanoid = () => {
                if (block.health <= 0) {
                   setScore((prev) => prev + block.maxHealth * 10);
 
-                  // Создаем эффект разрушения
                   const explosion = createBlockExplosion(
                      block.x,
                      block.y,
@@ -213,7 +198,6 @@ export const useArkanoid = () => {
                   );
                   particlesRef.current.push(...explosion);
 
-                  // Создание бонуса
                   if (block.hasPowerUp && block.powerUpType) {
                      powerUpsRef.current.push({
                         x: block.x + block.width / 2 - 15,
@@ -228,22 +212,17 @@ export const useArkanoid = () => {
                   blocksRef.current.splice(i, 1);
                }
 
-               return false; // Удаляем пулю
+               return false;
             }
          }
 
-         // Удаление пули если она вышла за экран
          return bullet.y > 0;
       });
 
-      // Обновление частиц
       particlesRef.current = updateParticles(particlesRef.current);
 
-      // Обновление бонусов
       powerUpsRef.current = powerUpsRef.current.filter((powerUp) => {
          powerUp.y += powerUp.dy;
-
-         // Проверка поймал ли игрок бонус
          if (
             checkPowerUpPaddleCollision(
                powerUp.x,
@@ -257,11 +236,9 @@ export const useArkanoid = () => {
             return false;
          }
 
-         // Удаление бонуса если он вышел за экран
          return powerUp.y < GAME_CONFIG.CANVAS_HEIGHT;
       });
 
-      // Проверка победы
       if (blocksRef.current.length === 0) {
          setGameState(GameState.WON);
       }

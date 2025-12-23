@@ -1,19 +1,15 @@
-// components/Particle.tsx
-
 import React from 'react';
 import { Particle as ParticleType } from '@/types/arkanoid.types';
 
 export const renderParticles = (particles: ParticleType[], ctx: CanvasRenderingContext2D) => {
   particles.forEach(particle => {
-    // Пропускаем эмодзи частицы (они рендерятся отдельно)
     if (particle.color === '💣') return;
     
     const alpha = particle.life / particle.maxLife;
     
     ctx.save();
     ctx.globalAlpha = alpha;
-    
-    // Градиент для частицы
+
     const gradient = ctx.createRadialGradient(
       particle.x, particle.y, 0,
       particle.x, particle.y, particle.size
@@ -30,7 +26,6 @@ export const renderParticles = (particles: ParticleType[], ctx: CanvasRenderingC
   });
 };
 
-// Функция для создания частиц при разрушении блока
 export const createBlockExplosion = (
   x: number,
   y: number,
@@ -58,8 +53,7 @@ export const createBlockExplosion = (
       size: 2 + Math.random() * 3
     });
   }
-  
-  // Добавляем эмодзи взрыва 💣
+
   particles.push({
     x: centerX,
     y: centerY,
@@ -67,20 +61,17 @@ export const createBlockExplosion = (
     vy: -1,
     life: 20,
     maxLife: 20,
-    color: '💣', // Специальный маркер для эмодзи
+    color: '💣',
     size: 0
   });
   
   return particles;
 };
 
-// Обновление частиц
 export const updateParticles = (particles: ParticleType[]): ParticleType[] => {
   return particles.filter(particle => {
     particle.x += particle.vx;
     particle.y += particle.vy;
-    
-    // Гравитация только для обычных частиц, не для эмодзи
     if (particle.color !== '💣') {
       particle.vy += 0.15;
     }
@@ -91,12 +82,11 @@ export const updateParticles = (particles: ParticleType[]): ParticleType[] => {
   });
 };
 
-// Рендер эмодзи частиц
 export const renderEmojiParticles = (particles: ParticleType[], ctx: CanvasRenderingContext2D) => {
   particles.forEach(particle => {
     if (particle.color === '💣') {
       const alpha = particle.life / particle.maxLife;
-      const scale = 1 + (1 - alpha) * 0.5; // Увеличивается при исчезновении
+      const scale = 1 + (1 - alpha) * 0.5;
       
       ctx.save();
       ctx.globalAlpha = alpha;

@@ -1,11 +1,7 @@
 "use client";
 
 import { useState, useCallback, useMemo } from "react";
-import type {
-   Board,
-   Tetromino,
-   Position,
-} from "@/types/tetris.types";
+import type { Board, Tetromino, Position } from "@/types/tetris.types";
 import {
    BOARD_WIDTH,
    BOARD_HEIGHT,
@@ -69,67 +65,70 @@ export const useTetris = () => {
       return { x: position.x, y: ghostY };
    }, [currentPiece, position, isCollision]);
 
-   const mergePieceToBoard = useCallback((mergePosition?: Position) => {
-      if (!currentPiece) return;
+   const mergePieceToBoard = useCallback(
+      (mergePosition?: Position) => {
+         if (!currentPiece) return;
 
-      const posToUse = mergePosition || position;
-      const newBoard = board.map((row) => row.map((cell) => ({ ...cell })));
+         const posToUse = mergePosition || position;
+         const newBoard = board.map((row) => row.map((cell) => ({ ...cell })));
 
-      for (let y = 0; y < currentPiece.shape.length; y++) {
-         for (let x = 0; x < currentPiece.shape[y].length; x++) {
-            if (currentPiece.shape[y][x]) {
-               const boardY = posToUse.y + y;
-               const boardX = posToUse.x + x;
-               if (
-                  boardY >= 0 &&
-                  boardY < BOARD_HEIGHT &&
-                  boardX >= 0 &&
-                  boardX < BOARD_WIDTH
-               ) {
-                  newBoard[boardY][boardX] = {
-                     filled: true,
-                     color: currentPiece.color,
-                     shadow: currentPiece.shadow,
-                  };
+         for (let y = 0; y < currentPiece.shape.length; y++) {
+            for (let x = 0; x < currentPiece.shape[y].length; x++) {
+               if (currentPiece.shape[y][x]) {
+                  const boardY = posToUse.y + y;
+                  const boardX = posToUse.x + x;
+                  if (
+                     boardY >= 0 &&
+                     boardY < BOARD_HEIGHT &&
+                     boardX >= 0 &&
+                     boardX < BOARD_WIDTH
+                  ) {
+                     newBoard[boardY][boardX] = {
+                        filled: true,
+                        color: currentPiece.color,
+                        shadow: currentPiece.shadow,
+                     };
+                  }
                }
             }
          }
-      }
 
-      let linesCleared = 0;
-      const filteredBoard = newBoard.filter((row) => {
-         const isComplete = row.every((cell) => cell.filled);
-         if (isComplete) linesCleared++;
-         return !isComplete;
-      });
-
-      while (filteredBoard.length < BOARD_HEIGHT) {
-         filteredBoard.unshift(
-            Array.from({ length: BOARD_WIDTH }, () => ({
-               filled: false,
-               color: "",
-               shadow: "",
-            }))
-         );
-      }
-
-      setBoard(filteredBoard);
-
-      if (linesCleared > 0) {
-         const points =
-            POINTS[linesCleared as keyof typeof POINTS] * level || 0;
-         setScore((prev) => prev + points);
-         setLines((prev) => {
-            const newLines = prev + linesCleared;
-            setLevel(Math.floor(newLines / 10) + 1);
-            return newLines;
+         let linesCleared = 0;
+         const filteredBoard = newBoard.filter((row) => {
+            const isComplete = row.every((cell) => cell.filled);
+            if (isComplete) linesCleared++;
+            return !isComplete;
          });
-      }
 
-      setCurrentPiece(nextPiece);
-      setNextPiece(getRandomTetromino());
-      setPosition({ x: Math.floor(BOARD_WIDTH / 2) - 1, y: 0 });
-   }, [currentPiece, position, board, nextPiece, level]);
+         while (filteredBoard.length < BOARD_HEIGHT) {
+            filteredBoard.unshift(
+               Array.from({ length: BOARD_WIDTH }, () => ({
+                  filled: false,
+                  color: "",
+                  shadow: "",
+               }))
+            );
+         }
+
+         setBoard(filteredBoard);
+
+         if (linesCleared > 0) {
+            const points =
+               POINTS[linesCleared as keyof typeof POINTS] * level || 0;
+            setScore((prev) => prev + points);
+            setLines((prev) => {
+               const newLines = prev + linesCleared;
+               setLevel(Math.floor(newLines / 10) + 1);
+               return newLines;
+            });
+         }
+
+         setCurrentPiece(nextPiece);
+         setNextPiece(getRandomTetromino());
+         setPosition({ x: Math.floor(BOARD_WIDTH / 2) - 1, y: 0 });
+      },
+      [currentPiece, position, board, nextPiece, level]
+   );
 
    const moveDown = useCallback(() => {
       if (!currentPiece || isPaused) return;
@@ -175,19 +174,18 @@ export const useTetris = () => {
 
    const drop = useCallback(() => {
       if (!currentPiece || isPaused) return;
-    
+
       let dropY = position.y;
       while (!isCollision(currentPiece, { x: position.x, y: dropY + 1 })) {
          dropY++;
       }
-    
+
       const finalPosition = { x: position.x, y: dropY };
-      
+
       setPosition(finalPosition);
       mergePieceToBoard(finalPosition);
    }, [currentPiece, position, isCollision, mergePieceToBoard, isPaused]);
-    
-    
+
    const startGame = useCallback(() => {
       setBoard(createEmptyBoard());
       setCurrentPiece(getRandomTetromino());

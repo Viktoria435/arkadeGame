@@ -36,29 +36,23 @@ export const reflectBallFromBlock = (ball: Ball, block: Block): void => {
    const halfWidth = block.width / 2;
    const halfHeight = block.height / 2;
 
-   // Определяем с какой стороны произошло столкновение
    if (Math.abs(deltaX / halfWidth) > Math.abs(deltaY / halfHeight)) {
-      // Столкновение слева или справа
       ball.dx = -ball.dx;
    } else {
-      // Столкновение сверху или снизу
       ball.dy = -ball.dy;
    }
 
-   // Добавляем небольшую вариацию угла для интереса
    const variation = (Math.random() - 0.5) * 0.3;
    ball.dx += variation;
 
-   // Нормализуем скорость
    const magnitude = Math.sqrt(ball.dx ** 2 + ball.dy ** 2);
    ball.dx = (ball.dx / magnitude) * ball.speed;
    ball.dy = (ball.dy / magnitude) * ball.speed;
 };
 
 export const reflectBallFromPaddle = (ball: Ball, paddle: Paddle): void => {
-   // Вычисляем угол отскока в зависимости от точки удара о платформу
-   const hitPos = (ball.x - paddle.x) / paddle.width; // 0 to 1
-   const angle = (hitPos - 0.5) * Math.PI * 0.6; // -54° to 54°
+   const hitPos = (ball.x - paddle.x) / paddle.width; 
+   const angle = (hitPos - 0.5) * Math.PI * 0.6; 
 
    const speed = ball.speed;
    ball.dx = speed * Math.sin(angle);
@@ -97,7 +91,6 @@ export const updateBallPosition = (ball: Ball): void => {
    ball.x += ball.dx;
    ball.y += ball.dy;
 
-   // Отскок от стен
    if (
       ball.x - ball.radius < 0 ||
       ball.x + ball.radius > GAME_CONFIG.CANVAS_WIDTH

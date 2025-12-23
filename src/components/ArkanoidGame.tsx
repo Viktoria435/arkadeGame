@@ -91,7 +91,6 @@ export const GameCanvas: React.FC<GameCanvasProps> = ({
       };
    }, [gameState, gameLoop]);
 
-   // Начальная отрисовка
    useEffect(() => {
       draw();
    }, [draw]);

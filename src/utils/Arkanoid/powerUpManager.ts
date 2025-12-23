@@ -10,7 +10,6 @@ export class PowerUpManager {
       balls: Ball[],
       onExtraBall?: (ball: Ball) => void
    ): void {
-      // Очистка предыдущих таймеров для этого типа бонуса
       if (this.timers[type]) {
          clearTimeout(this.timers[type]);
       }

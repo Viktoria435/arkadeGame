@@ -5,7 +5,6 @@ export const renderBullets = (
    ctx: CanvasRenderingContext2D
 ) => {
    bullets.forEach((bullet) => {
-      // Градиент для пули
       const gradient = ctx.createLinearGradient(
          bullet.x,
          bullet.y,
@@ -17,8 +16,6 @@ export const renderBullets = (
 
       ctx.fillStyle = gradient;
       ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
-
-      // Блик
       ctx.fillStyle = "#fef3c7";
       ctx.fillRect(bullet.x + 1, bullet.y, 1, bullet.height / 2);
    });
