@@ -5,6 +5,7 @@ import { ScoreBoard } from "./(Game)/ScoreBoard";
 import { GameCanvas } from "@/components/ArkanoidGame";
 import { GameOverlay } from "./(Game)/GameOverlay";
 import { useArkanoid } from "@/hooks/useArkanoid";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 
 const ArkanoidGame: React.FC = () => {
    const {
@@ -58,7 +59,8 @@ const ArkanoidGame: React.FC = () => {
    }, [initGame]);
 
    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-8">
+      <ProtectedRoute>
+         <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-8">
          <div className="flex flex-col items-center gap-6">
             <div className="text-center">
                <ScoreBoard score={score} lives={lives} />
@@ -84,7 +86,8 @@ const ArkanoidGame: React.FC = () => {
                />
             </div>
          </div>
-      </div>
+         </div>
+      </ProtectedRoute>
    );
 };
 

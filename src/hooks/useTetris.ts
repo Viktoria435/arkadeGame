@@ -12,8 +12,10 @@ import {
    getRandomTetromino,
    rotateTetromino,
 } from "@/utils/tetris.utils";
+import { useAuth } from "@/context/AuthContext";
 
 export const useTetris = () => {
+   const { user, updateUser } = useAuth();
    const [board, setBoard] = useState<Board>(createEmptyBoard());
    const [currentPiece, setCurrentPiece] = useState<Tetromino | null>(null);
    const [nextPiece, setNextPiece] = useState<Tetromino>(getRandomTetromino());
@@ -23,6 +25,7 @@ export const useTetris = () => {
    const [lines, setLines] = useState<number>(0);
    const [gameOver, setGameOver] = useState<boolean>(true);
    const [isPaused, setIsPaused] = useState<boolean>(false);
+   const [gameStartTime, setGameStartTime] = useState<Date | null>(null);
 
    const isCollision = useCallback(
       (
@@ -130,6 +133,37 @@ export const useTetris = () => {
       [currentPiece, position, board, nextPiece, level]
    );
 
+   const saveGameResult = useCallback(async (finalScore: number, finalLevel: number) => {
+      if (!user || finalScore === 0) return;
+
+      try {
+         const duration = gameStartTime
+            ? Math.floor((new Date().getTime() - gameStartTime.getTime()) / 1000)
+            : undefined;
+
+         const response = await fetch('/api/game/score', {
+            method: 'POST',
+            headers: {
+               'Content-Type': 'application/json',
+               'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            },
+            body: JSON.stringify({
+               game: 'tetris',
+               score: finalScore,
+               level: finalLevel,
+               duration,
+            }),
+         });
+
+         if (response.ok) {
+            const data = await response.json();
+            updateUser(data.user);
+         }
+      } catch (error) {
+         console.error('Error saving game result:', error);
+      }
+   }, [user, gameStartTime, updateUser]);
+
    const moveDown = useCallback(() => {
       if (!currentPiece || isPaused) return;
 
@@ -138,13 +172,15 @@ export const useTetris = () => {
       if (isCollision(currentPiece, newPos)) {
          if (position.y <= 0) {
             setGameOver(true);
+            // Save game result when game ends
+            saveGameResult(score, level);
             return;
          }
          mergePieceToBoard();
       } else {
          setPosition(newPos);
       }
-   }, [currentPiece, position, isCollision, mergePieceToBoard, isPaused]);
+   }, [currentPiece, position, isCollision, mergePieceToBoard, isPaused, saveGameResult, score, level]);
 
    const moveHorizontal = useCallback(
       (direction: number) => {
@@ -196,6 +232,7 @@ export const useTetris = () => {
       setLines(0);
       setGameOver(false);
       setIsPaused(false);
+      setGameStartTime(new Date());
    }, []);
 
    const togglePause = useCallback(() => {

@@ -3,10 +3,13 @@
 import React, { useState } from "react";
 import { Gamepad2, Trophy, Zap, Star } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
+import { Navigation } from "@/components/Navigation";
 
 const ArcadeGamesHome = () => {
    const [hoveredGame, setHoveredGame] = useState<string | null>(null);
    const router = useRouter();
+   const { user } = useAuth();
    const games = [
       {
          id: "tetris",
@@ -18,7 +21,7 @@ const ArcadeGamesHome = () => {
          icon: "🧊",
          difficulty: "Средняя",
          players: "1",
-         bestScore: "12,450",
+         bestScore: user?.stats.tetris.bestScore.toLocaleString() || "0",
       },
       {
          id: "flappy",
@@ -30,7 +33,7 @@ const ArcadeGamesHome = () => {
          icon: "🐦",
          difficulty: "Сложная",
          players: "1",
-         bestScore: "287",
+         bestScore: user?.stats.flappy.bestScore.toString() || "0",
       },
       {
          id: "arkanoid",
@@ -42,7 +45,7 @@ const ArcadeGamesHome = () => {
          icon: "🎯",
          difficulty: "Легкая",
          players: "1",
-         bestScore: "8,920",
+         bestScore: user?.stats.arkanoid.bestScore.toLocaleString() || "0",
       },
       {
          id: "blocks",
@@ -54,7 +57,7 @@ const ArcadeGamesHome = () => {
          icon: "🧩",
          difficulty: "Средняя",
          players: "1",
-         bestScore: "15,680",
+         bestScore: user?.stats.blocks.bestScore.toLocaleString() || "0",
       },
       {
          id: "race",
@@ -66,12 +69,13 @@ const ArcadeGamesHome = () => {
          icon: "🏎️",
          difficulty: "Средняя",
          players: "2",
-         bestScore: "10,000",
+         bestScore: user?.stats.race.bestScore.toLocaleString() || "0",
       },
    ];
 
    return (
       <div className="min-h-screen w-full bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100 relative overflow-hidden">
+         <Navigation />
          <div
             className="absolute inset-0 opacity-5 pointer-events-none"
             style={{
@@ -83,7 +87,7 @@ const ArcadeGamesHome = () => {
             }}
          />
 
-         <div className="relative z-10 container mx-auto px-6 py-12 max-w-7xl">
+         <div className="relative z-10 container mx-auto px-6 py-12 max-w-7xl mt-10">
             <div className="text-center mb-16 space-y-6">
                <div className="flex items-center justify-center gap-4 mb-4">
                   <Gamepad2 className="w-12 h-12 text-purple-400 animate-pulse" />
@@ -101,8 +105,10 @@ const ArcadeGamesHome = () => {
                   <div className="flex items-center gap-2 text-purple-700">
                      <Trophy className="w-5 h-5 text-yellow-500" />
                      <span className="text-sm">
-                        Игр доступно:{" "}
-                        <span className="font-bold text-purple-900">4</span>
+                        Игр сыграно:{" "}
+                        <span className="font-bold text-purple-900">
+                           {user ? user.totalGamesPlayed : 0}
+                        </span>
                      </span>
                   </div>
                   <div className="flex items-center gap-2 text-purple-700">
@@ -110,15 +116,17 @@ const ArcadeGamesHome = () => {
                      <span className="text-sm">
                         Всего очков:{" "}
                         <span className="font-bold text-purple-900">
-                           37,337
+                           {user ? user.totalScore.toLocaleString() : 0}
                         </span>
                      </span>
                   </div>
                   <div className="flex items-center gap-2 text-purple-700">
                      <Star className="w-5 h-5 text-pink-500" />
                      <span className="text-sm">
-                        Рекордов:{" "}
-                        <span className="font-bold text-purple-900">12</span>
+                        Достижений:{" "}
+                        <span className="font-bold text-purple-900">
+                           {user ? user.achievements.length : 0}
+                        </span>
                      </span>
                   </div>
                </div>

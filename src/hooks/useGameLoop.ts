@@ -15,8 +15,10 @@ import {
    updateCoins,
    calculateScore,
 } from "@/hooks/useRace";
+import { useAuth } from "@/context/AuthContext";
 
 export const useGameLoop = () => {
+   const { user, updateUser } = useAuth();
    const player1RoadStart = 50;
    const player2RoadStart =
       50 + GAME_CONFIG.ROAD_WIDTH + GAME_CONFIG.ROAD_PADDING;
@@ -69,6 +71,38 @@ export const useGameLoop = () => {
    const lastObstacleTime = useRef<number>(0);
    const lastCoinTime = useRef<number>(0);
    const animationFrameId = useRef<number>(0);
+   const gameStartTime = useRef<Date | null>(null);
+
+   const saveGameResult = useCallback(async (finalScore: number) => {
+      if (!user || finalScore === 0) return;
+   
+      try {
+         const duration = gameStartTime.current
+            ? Math.floor((new Date().getTime() - gameStartTime.current.getTime()) / 1000)
+            : undefined;
+   
+         const response = await fetch('/api/game/score', {
+            method: 'POST',
+            headers: {
+               'Content-Type': 'application/json',
+               'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            },
+            body: JSON.stringify({
+               game: 'race',
+               score: finalScore,
+               level: 1,
+               duration,
+            }),
+         });
+   
+         if (response.ok) {
+            const data = await response.json();
+            updateUser(data.user);
+         }
+      } catch (error) {
+         console.error('Error saving game result:', error);
+      }
+   }, [user, gameStartTime.current, updateUser]);
 
    useEffect(() => {
       const handleKeyDown = (e: KeyboardEvent) => {
@@ -95,6 +129,7 @@ export const useGameLoop = () => {
 
       if (!player1.isAlive && !player2.isAlive) {
          setGameState((prev) => ({ ...prev, isPlaying: false }));
+         saveGameResult(Math.max(player1.score, player2.score));
          return;
       }
 

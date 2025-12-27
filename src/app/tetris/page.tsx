@@ -7,6 +7,7 @@ import { Stats } from "@/app/tetris/(Game)/Stats";
 import { NextPiecePreview } from "@/app/tetris/(Game)/NextPiecePreview";
 import { Controls } from "@/app/tetris/(Game)/Controls";
 import { StartScreen } from "@/app/tetris/(Game)/StartScreen";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 
 export default function TetrisPage() {
    const {
@@ -85,7 +86,8 @@ export default function TetrisPage() {
    }, [gameOver, moveHorizontal, moveDown, rotate, drop, togglePause]);
 
    return (
-      <div className="flex items-center justify-center min-h-screen w-full bg-gradient-to-br from-cyan-500 to-blue-600 overflow-hidden relative">
+      <ProtectedRoute>
+         <div className="flex items-center justify-center min-h-screen w-full bg-gradient-to-br from-cyan-500 to-blue-600 overflow-hidden relative">
          <div className="absolute inset-0 overflow-hidden pointer-events-none">
             {[...Array(20)].map((_, i) => (
                <div
@@ -133,6 +135,7 @@ export default function TetrisPage() {
                )}
             </div>
          )}
-      </div>
+         </div>
+      </ProtectedRoute>
    );
 }

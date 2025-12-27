@@ -10,10 +10,12 @@ import {
    clearBombArea,
    calculateScore,
 } from "../utils/blocks.utils";
+import { useAuth } from "@/context/AuthContext";
 
-const STORAGE_KEY = "block-puzzle-high-score";
 
 export const useGameState = () => {
+   const { user, updateUser } = useAuth();
+   const [gameStartTime, setGameStartTime] = useState<Date | null>(null);
    const [gameState, setGameState] = useState<GameState>(() => ({
       board: createEmptyBoard(),
       score: 0,
@@ -30,19 +32,44 @@ export const useGameState = () => {
    }));
 
    useEffect(() => {
-      const savedHighScore = localStorage.getItem(STORAGE_KEY);
-      if (savedHighScore) {
-         setGameState((prev) => ({
-            ...prev,
-            highScore: parseInt(savedHighScore),
-         }));
-      }
+      setGameStartTime(new Date());
    }, []);
+
+   const saveGameResult = useCallback(async (finalScore: number, finalLevel: number) => {
+      if (!user || finalScore === 0) return;
+   
+      try {
+         const duration = gameStartTime
+            ? Math.floor((new Date().getTime() - gameStartTime.getTime()) / 1000)
+            : undefined;
+   
+         const response = await fetch('/api/game/score', {
+            method: 'POST',
+            headers: {
+               'Content-Type': 'application/json',
+               'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            },
+            body: JSON.stringify({
+               game: 'blocks',
+               score: finalScore,
+               level: finalLevel,
+               duration,
+            }),
+         });
+   
+         if (response.ok) {
+            const data = await response.json();
+            updateUser(data.user);
+         }
+      } catch (error) {
+         console.error('Error saving game result:', error);
+      }
+   }, [user, gameStartTime, updateUser]);
 
    useEffect(() => {
       if (gameState.score > gameState.highScore) {
          setGameState((prev) => ({ ...prev, highScore: prev.score }));
-         localStorage.setItem(STORAGE_KEY, gameState.score.toString());
+         saveGameResult(gameState.score, 1);
       }
    }, [gameState.score, gameState.highScore]);
 
@@ -164,6 +191,7 @@ export const useGameState = () => {
    }, []);
 
    const restartGame = useCallback(() => {
+      setGameStartTime(new Date()); 
       setGameState((prev) => ({
          board: createEmptyBoard(),
          score: 0,

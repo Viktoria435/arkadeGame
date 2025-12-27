@@ -13,9 +13,11 @@ import {
    PIPE_SPAWN_DISTANCE,
    INITIAL_SPEED,
 } from "@/config/bird.config";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useAuth } from "@/context/AuthContext";
 
 export default function useFlappyBird() {
+   const { user, updateUser } = useAuth();
    const canvasRef = useRef<HTMLCanvasElement | null>(null);
    const requestRef = useRef<number>(0);
 
@@ -29,7 +31,7 @@ export default function useFlappyBird() {
 
    const gameStarted = true;
    const [gameOver, setGameOver] = useState(false);
-
+   const [gameStartTime, setGameStartTime] = useState<Date | null>(null);
    const speed = useRef(INITIAL_SPEED);
 
    const birdImgs = useRef<HTMLImageElement[]>([]);
@@ -40,6 +42,38 @@ export default function useFlappyBird() {
    const groundImg = useRef<HTMLImageElement | null>(null);
    const backgroundLoaded = useRef(false);
    const groundLoaded = useRef(false);
+
+
+const saveGameResult = useCallback(async (finalScore: number, finalLevel: number) => {
+   if (!user || finalScore === 0) return;
+
+   try {
+      const duration = gameStartTime
+         ? Math.floor((new Date().getTime() - gameStartTime.getTime()) / 1000)
+         : undefined;
+
+      const response = await fetch('/api/game/score', {
+         method: 'POST',
+         headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+         },
+         body: JSON.stringify({
+            game: 'flappy',
+            score: finalScore,
+            level: finalLevel,
+            duration,
+         }),
+      });
+
+      if (response.ok) {
+         const data = await response.json();
+         updateUser(data.user);
+      }
+   } catch (error) {
+      console.error('Error saving game result:', error);
+   }
+}, [user, gameStartTime, updateUser]);
 
    const spawnPipe = (canvasWidth: number) => {
       const top = Math.random() * 250 + 30;
@@ -416,6 +450,7 @@ export default function useFlappyBird() {
             imagesLoadedCount.current++;
             if (imagesLoadedCount.current === BIRD_IMAGE_URLS.length) {
                imageLoaded.current = true;
+               setGameStartTime(new Date());
                animate();
             }
          };
@@ -438,6 +473,12 @@ export default function useFlappyBird() {
          window.removeEventListener("mousedown", jump);
          window.removeEventListener("keydown", jump);
       };
+   }, [gameOver]);
+
+   useEffect(() => {
+      if (gameOver) {
+         saveGameResult(score, level);
+      }
    }, [gameOver]);
 
    return {
