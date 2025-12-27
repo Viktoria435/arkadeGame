@@ -279,18 +279,18 @@ function checkAchievements(user: User): string[] {
    }
 
    // 10 игр
-   if (user.totalGamesPlayed >= 10 && !achievements.includes("10_games")) {
-      achievements.push("10_games");
+   if (user.totalGamesPlayed >= 10 && !achievements.includes("ten_games")) {
+      achievements.push("ten_games");
    }
 
    // 100 игр
-   if (user.totalGamesPlayed >= 100 && !achievements.includes("100_games")) {
-      achievements.push("100_games");
+   if (user.totalGamesPlayed >= 100 && !achievements.includes("one_hundred_games")) {
+      achievements.push("one_hundred_games");
    }
 
    // Общий счет > 50000
-   if (user.totalScore >= 50000 && !achievements.includes("score_50k")) {
-      achievements.push("score_50k");
+   if (user.totalScore >= 1000 && !achievements.includes("score_1k")) {
+      achievements.push("score_1k");
    }
 
    // Cыграл во все 5 игр
