@@ -13,13 +13,16 @@ import {
 import { useAuth } from "@/context/AuthContext";
 
 
-export const useGameState = () => {
+export const useBlocks = () => {
    const { user, updateUser } = useAuth();
    const [gameStartTime, setGameStartTime] = useState<Date | null>(null);
+   const [isInitialized, setIsInitialized] = useState(false);
+   const [clearingCells, setClearingCells] = useState<Position[]>([]);
+   
    const [gameState, setGameState] = useState<GameState>(() => ({
       board: createEmptyBoard(),
       score: 0,
-      tetrominoes: generateTetrominoes(),
+      tetrominoes: [],
       powerUps: {
          bomb: { type: "bomb", count: 1, maxCount: 1 },
          shuffle: { type: "shuffle", count: 2, maxCount: 2 },
@@ -28,12 +31,18 @@ export const useGameState = () => {
       gameOver: false,
       selectedTetromino: null,
       isPlacingTetromino: false,
-      highScore: 0,
    }));
 
    useEffect(() => {
-      setGameStartTime(new Date());
-   }, []);
+      if (!isInitialized) {
+         setGameState((prev) => ({
+            ...prev,
+            tetrominoes: generateTetrominoes(),
+         }));
+         setGameStartTime(new Date());
+         setIsInitialized(true);
+      }
+   }, [isInitialized]);
 
    const saveGameResult = useCallback(async (finalScore: number, finalLevel: number) => {
       if (!user || finalScore === 0) return;
@@ -66,12 +75,12 @@ export const useGameState = () => {
       }
    }, [user, gameStartTime, updateUser]);
 
+
    useEffect(() => {
-      if (gameState.score > gameState.highScore) {
-         setGameState((prev) => ({ ...prev, highScore: prev.score }));
+      if (gameState.gameOver) {
          saveGameResult(gameState.score, 1);
       }
-   }, [gameState.score, gameState.highScore]);
+   }, [gameState.gameOver]);
 
    const selectTetromino = useCallback((id: string | null) => {
       setGameState((prev) => ({
@@ -93,20 +102,53 @@ export const useGameState = () => {
             return prev;
          }
 
-         let newBoard = placeTetromino(prev.board, tetromino, position);
+         const newBoard = placeTetromino(prev.board, tetromino, position);
 
          const newTetrominoes = prev.tetrominoes.filter(
             (t) => t.id !== prev.selectedTetromino
          );
+         
          const {
-            newBoard: clearedBoard,
+            newBoard: boardBeforeClear,
             linesCleared,
             clearedCells,
          } = clearFilledLines(newBoard);
-         newBoard = clearedBoard;
 
-         const points = calculateScore(linesCleared, clearedCells.length);
-         const newScore = prev.score + points;
+         if (clearedCells.length > 0) {
+            setClearingCells(clearedCells);
+            
+            setTimeout(() => {
+               setGameState((current) => {
+                  const points = calculateScore(linesCleared, clearedCells.length);
+                  const newScore = current.score + points;
+
+                  const finalTetrominoes =
+                     newTetrominoes.length === 0
+                        ? generateTetrominoes()
+                        : newTetrominoes;
+                  const isGameOver = !hasValidMoves(boardBeforeClear, finalTetrominoes);
+                  
+
+                  return {
+                     ...current,
+                     board: boardBeforeClear,
+                     score: newScore,
+                     tetrominoes: finalTetrominoes,
+                     selectedTetromino: null,
+                     gameOver: isGameOver,
+                  };
+               });
+               
+               setClearingCells([]);
+            }, 500);
+
+            return {
+               ...prev,
+               board: newBoard,
+               tetrominoes: newTetrominoes,
+               selectedTetromino: null,
+            };
+         }
 
          const finalTetrominoes =
             newTetrominoes.length === 0
@@ -117,7 +159,6 @@ export const useGameState = () => {
          return {
             ...prev,
             board: newBoard,
-            score: newScore,
             tetrominoes: finalTetrominoes,
             selectedTetromino: null,
             gameOver: isGameOver,
@@ -192,6 +233,7 @@ export const useGameState = () => {
 
    const restartGame = useCallback(() => {
       setGameStartTime(new Date()); 
+      setClearingCells([]);
       setGameState((prev) => ({
          board: createEmptyBoard(),
          score: 0,
@@ -204,7 +246,6 @@ export const useGameState = () => {
          gameOver: false,
          selectedTetromino: null,
          isPlacingTetromino: false,
-         highScore: prev.highScore,
       }));
    }, []);
 
@@ -216,5 +257,7 @@ export const useGameState = () => {
       shuffleTetrominoes,
       useSingleBlock,
       restartGame,
+      isInitialized,
+      clearingCells,
    };
 };

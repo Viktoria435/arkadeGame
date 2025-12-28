@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { useGameState } from "@/hooks/useGameState";
+import { useBlocks } from "@/hooks/useBlocks";
 import { Board } from "./(Game)/Board";
 import { TetrominoPreview } from "./(Game)/TetrominoPreview";
 import { PowerUps } from "./(Game)/PowerUps";
@@ -18,7 +18,9 @@ const BlockPuzzleGame: React.FC = () => {
       shuffleTetrominoes,
       useSingleBlock,
       restartGame,
-   } = useGameState();
+      isInitialized,
+      clearingCells,
+   } = useBlocks();
 
    const [isBombMode, setIsBombMode] = useState(false);
 
@@ -43,11 +45,19 @@ const BlockPuzzleGame: React.FC = () => {
       (t) => t.id === gameState.selectedTetromino
    );
 
+   if (!isInitialized) {
+      return (
+         <div className="min-h-screen bg-gradient-to-br from-green-50 via-green-700 to-slate-50 flex items-center justify-center">
+            <div className="text-white text-2xl">Загрузка...</div>
+         </div>
+      );
+   }
+
    return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 via-green-700 to-slate-50 py-8 px-4">
+      <div className="min-h-screen bg-gradient-to-b from-green-50 to-green-700 py-8 px-4">
          <div className="max-w-7xl mx-auto">
             <div className="text-center mb-8">
-               <h1 className="text-4xl font-bold text-white mb-2 drop-shadow-lg">
+               <h1 className="text-4xl font-bold text-[#0d883c] mb-2 drop-shadow-lg">
                   🧩 Блоки Головоломка
                </h1>
             </div>
@@ -55,7 +65,6 @@ const BlockPuzzleGame: React.FC = () => {
             <div className="mb-8">
                <ScoreBoard
                   score={gameState.score}
-                  highScore={gameState.highScore}
                />
             </div>
             <div className="flex flex-col lg:flex-row gap-8 items-start justify-center">
@@ -75,10 +84,11 @@ const BlockPuzzleGame: React.FC = () => {
                      onPlaceTetromino={placeTetromino}
                      onBombClick={handleBoardBombClick}
                      isBombMode={isBombMode}
+                     clearingCells={clearingCells}
                   />
                </div>
                <div className="w-1/3 bg-transparent">
-                  <div className="flex gap-4 flex-wrap justify-center">
+                  <div className="flex flex-col  gap-4 flex-wrap justify-center">
                      {gameState.tetrominoes.map((tetromino) => (
                         <TetrominoPreview
                            key={tetromino.id}
@@ -101,7 +111,6 @@ const BlockPuzzleGame: React.FC = () => {
             {gameState.gameOver && (
                <GameOver
                   score={gameState.score}
-                  highScore={gameState.highScore}
                   onRestart={restartGame}
                />
             )}

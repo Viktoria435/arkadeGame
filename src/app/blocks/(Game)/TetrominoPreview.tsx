@@ -20,7 +20,7 @@ export const TetrominoPreview: React.FC<TetrominoPreviewProps> = ({
          onClick={onSelect}
          disabled={disabled}
          className={`
-        p-4 bg-green-500/40 rounded-lg transition-all duration-200
+      p-2 w-35 bg-black/30 rounded-lg transition-all duration-200
         ${
            isSelected
               ? "ring-4 ring-blue-500 scale-105 bg-slate-600"

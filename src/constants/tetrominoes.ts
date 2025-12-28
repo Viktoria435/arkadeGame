@@ -46,20 +46,22 @@ export const TETROMINO_SHAPES = {
 };
 
 export const COLORS = [
-   "#ef4444",
-   "#f97316",
-   "#f59e0b",
-   "#84cc16",
-   "#10b981",
-   "#06b6d4",
-   "#3b82f6",
-   "#8b5cf6",
-   "#ec4899",
-   "#f43f5e",
+   "#ef4444", // red
+   "#f97316", // orange
+   "#f59e0b", // amber
+   "#84cc16", // lime
+   "#10b981", // emerald
+   "#06b6d4", // cyan
+   "#3b82f6", // blue
+   "#8b5cf6", // violet
+   "#ec4899", // pink
+   "#f43f5e", // rose
 ];
 
 export const generateRandomTetromino = (id: string): Tetromino => {
    const shapes = Object.values(TETROMINO_SHAPES);
+   
+   // Используем Math.random() для настоящей случайности
    const randomShape = shapes[Math.floor(Math.random() * shapes.length)];
    const randomColor = COLORS[Math.floor(Math.random() * COLORS.length)];
 
@@ -71,10 +73,12 @@ export const generateRandomTetromino = (id: string): Tetromino => {
 };
 
 export const generateTetrominoes = (): Tetromino[] => {
+   // Генерируем уникальные ID с временной меткой для каждого вызова
+   const timestamp = Date.now();
    return [
-      generateRandomTetromino("t1"),
-      generateRandomTetromino("t2"),
-      generateRandomTetromino("t3"),
+      generateRandomTetromino(`t1-${timestamp}`),
+      generateRandomTetromino(`t2-${timestamp}`),
+      generateRandomTetromino(`t3-${timestamp}`),
    ];
 };
 

@@ -1,4 +1,4 @@
-export type CellValue = number | null;
+export type CellValue = number | null | string;
 
 export interface Position {
    row: number;
@@ -29,7 +29,6 @@ export interface GameState {
    gameOver: boolean;
    selectedTetromino: string | null;
    isPlacingTetromino: boolean;
-   highScore: number;
 }
 
 export const BOARD_SIZE = 8;

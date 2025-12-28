@@ -49,14 +49,13 @@ export const placeTetromino = (
 ): CellValue[][] => {
    const newBoard = board.map((row) => [...row]);
    const { shape } = tetromino;
-   const colorIndex = parseInt(tetromino.id.slice(1)) || 0;
 
    for (let row = 0; row < shape.length; row++) {
       for (let col = 0; col < shape[row].length; col++) {
          if (shape[row][col]) {
             const boardRow = position.row + row;
             const boardCol = position.col + col;
-            newBoard[boardRow][boardCol] = colorIndex;
+            newBoard[boardRow][boardCol] = tetromino.color;
          }
       }
    }

@@ -16,8 +16,9 @@ export async function GET(request: NextRequest) {
          );
       }
 
-      const token = authHeader.substring(7); // Remove "Bearer " prefix
+      const token = authHeader.substring(7); 
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const decoded = jwt.verify(token, JWT_SECRET) as any;
 
       const user = await getUserById(decoded.userId);
