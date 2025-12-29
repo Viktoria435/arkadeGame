@@ -214,7 +214,10 @@ const ArcadeGamesHome = () => {
 
             <div className="text-center space-y-4">
                <div className="flex justify-center gap-4">
-                  <button className="px-6 py-3 bg-purple-200 hover:bg-purple-300 border border-purple-300 text-purple-700 rounded-xl font-semibold transition-all duration-300 hover:scale-105">
+                  <button
+                     onClick={() => router.push(`/leaderboard`)}
+                     className="px-6 py-3 bg-purple-200 hover:bg-purple-300 border border-purple-300 text-purple-700 rounded-xl font-semibold transition-all duration-300 hover:scale-105"
+                  >
                      Таблица лидеров
                   </button>
                   <button className="px-6 py-3 bg-pink-200 hover:bg-pink-300 border border-pink-300 text-pink-700 rounded-xl font-semibold transition-all duration-300 hover:scale-105">

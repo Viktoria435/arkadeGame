@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import bcrypt from "bcryptjs";
 import db from "./couchdb";
 import type { User, GameScore, GameRecord, UserGameStats } from "@/types/user";
@@ -207,10 +208,10 @@ export async function getUserGameRecords(
 
 
  // Получение топ рекордов по игре (таблица лидеров)
-export async function getGameLeaderboard(
+ export async function getGameLeaderboard(
    game: string,
    limit: number = 10
-): Promise<Array<{ username: string; score: number; timestamp: Date }>> {
+): Promise<Array<{ userId: string; username: string; score: number; rank: number; date: string }>> {
    const database = await db;
 
    const result = await database.find({
@@ -218,14 +219,18 @@ export async function getGameLeaderboard(
          type: "game_record",
          game,
       },
-      sort: [{ score: "desc" }],
-      limit,
    });
 
-   return result.docs.map((doc: unknown) => ({
-      username: (doc as GameRecord).username,
-      score: (doc as GameRecord).score,
-      timestamp: (doc as GameRecord).timestamp,
+   const sortedDocs = result.docs
+      .sort((a: any, b: any) => (b.score || 0) - (a.score || 0))
+      .slice(0, limit);
+
+   return sortedDocs.map((doc: any, index: number) => ({
+      userId: doc._id || doc.userId || `user_${index}`,
+      username: doc.username,
+      score: doc.score || 0,
+      rank: index + 1,
+      date: doc.timestamp ? new Date(doc.timestamp).toISOString() : new Date().toISOString(),
    }));
 }
 
@@ -288,7 +293,7 @@ function checkAchievements(user: User): string[] {
       achievements.push("one_hundred_games");
    }
 
-   // Общий счет > 50000
+   // Общий счет > 1000
    if (user.totalScore >= 1000 && !achievements.includes("score_1k")) {
       achievements.push("score_1k");
    }
