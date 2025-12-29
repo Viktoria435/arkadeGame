@@ -1,5 +1,3 @@
-// types/user.ts
-
 export interface GameScore {
     game: 'tetris' | 'flappy' | 'arkanoid' | 'blocks' | 'race';
     score: number;

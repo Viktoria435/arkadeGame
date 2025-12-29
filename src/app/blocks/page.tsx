@@ -8,6 +8,8 @@ import { PowerUps } from "./(Game)/PowerUps";
 import { ScoreBoard } from "./(Game)/ScoreBoard";
 import { GameOver } from "./(Game)/GameOver";
 import { Position } from "@/types/blocks.types";
+import { useRouter } from "next/navigation";
+
 
 const BlockPuzzleGame: React.FC = () => {
    const {
@@ -21,7 +23,7 @@ const BlockPuzzleGame: React.FC = () => {
       isInitialized,
       clearingCells,
    } = useBlocks();
-
+   const router = useRouter();
    const [isBombMode, setIsBombMode] = useState(false);
 
    const handleBombClick = () => {
@@ -102,6 +104,7 @@ const BlockPuzzleGame: React.FC = () => {
                      ))}
                   </div>
                </div>
+               <button onClick={() => router.push(`/`)} className="absolute bottom-10 right-10 px-6 py-3 bg-green-800 rounded-xl font-semibold transition-all duration-300 hover:scale-105">🏠</button>
             </div>
             {isBombMode && (
                <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 bg-red-600 text-white px-6 py-3 rounded-full shadow-lg animate-pulse">

@@ -10,6 +10,7 @@ import { PlayerHUD } from "./(Game)/PlayerHUD";
 import { CenterHUD } from "./(Game)/CenterHUD";
 import { GAME_CONFIG } from "@/types/race.types";
 import { getWinner } from "@/hooks/useRace";
+import { useRouter } from "next/navigation";
 
 const RacingGame: React.FC = () => {
    const {
@@ -25,7 +26,7 @@ const RacingGame: React.FC = () => {
       startGame,
       togglePause,
    } = useGameLoop();
-
+   const router = useRouter();
    const showGameOver =
       gameState.isPlaying === false && (player1.score > 0 || player2.score > 0);
 
@@ -250,6 +251,7 @@ const RacingGame: React.FC = () => {
                </div>
             )}
          </div>
+         <button onClick={() => router.push(`/`)} className="absolute bottom-10 right-10 px-6 py-3 bg-red-500 rounded-xl font-semibold transition-all duration-300 hover:scale-105"> 🏠</button>
       </div>
    );
 };

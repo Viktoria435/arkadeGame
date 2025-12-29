@@ -8,6 +8,7 @@ import { NextPiecePreview } from "@/app/tetris/(Game)/NextPiecePreview";
 import { Controls } from "@/app/tetris/(Game)/Controls";
 import { StartScreen } from "@/app/tetris/(Game)/StartScreen";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { useRouter } from "next/navigation";
 
 export default function TetrisPage() {
    const {
@@ -30,6 +31,7 @@ export default function TetrisPage() {
    } = useTetris();
 
    const gameLoopRef = useRef<NodeJS.Timeout | null>(null);
+   const router = useRouter();
 
    useEffect(() => {
       if (gameOver || isPaused) {
@@ -135,6 +137,7 @@ export default function TetrisPage() {
                )}
             </div>
          )}
+         <button onClick={() => router.push(`/`)} className="absolute bottom-10 right-10 px-6 py-3 bg-blue-500 rounded-xl font-semibold transition-all duration-300 hover:scale-105">🏠</button>
          </div>
       </ProtectedRoute>
    );

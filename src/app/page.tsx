@@ -220,9 +220,7 @@ const ArcadeGamesHome = () => {
                   >
                      Таблица лидеров
                   </button>
-                  <button className="px-6 py-3 bg-pink-200 hover:bg-pink-300 border border-pink-300 text-pink-700 rounded-xl font-semibold transition-all duration-300 hover:scale-105">
-                     Достижения
-                  </button>
+            
                </div>
             </div>
          </div>

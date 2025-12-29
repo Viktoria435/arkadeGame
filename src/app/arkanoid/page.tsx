@@ -6,6 +6,7 @@ import { GameCanvas } from "@/components/ArkanoidGame";
 import { GameOverlay } from "./(Game)/GameOverlay";
 import { useArkanoid } from "@/hooks/useArkanoid";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { useRouter } from "next/navigation";
 
 const ArkanoidGame: React.FC = () => {
    const {
@@ -26,6 +27,7 @@ const ArkanoidGame: React.FC = () => {
       initGame,
    } = useArkanoid();
 
+   const router = useRouter();
    useEffect(() => {
       const onKeyDown = (e: KeyboardEvent) => {
          if (
@@ -86,6 +88,7 @@ const ArkanoidGame: React.FC = () => {
                />
             </div>
          </div>
+         <button onClick={() => router.push(`/`)} className="absolute bottom-10 right-10 px-6 py-3 bg-purple-500 rounded-xl font-semibold transition-all duration-300 hover:scale-105">🏠</button>
          </div>
       </ProtectedRoute>
    );
