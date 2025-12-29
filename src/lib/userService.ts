@@ -11,9 +11,8 @@ const initUserStats = (): UserGameStats => ({
    race: { bestScore: 0, gamesPlayed: 0, totalScore: 0 },
 });
 
-/**
- * Создание нового пользователя
- */
+
+// Создание нового пользователя
 export async function createUser(
    username: string,
    email: string,
@@ -109,25 +108,6 @@ export async function getUserById(userId: string): Promise<User | null> {
       console.error("Error getting user by ID:", error);
       return null;
    }
-}
-
-// Получение пользователя по email
-export async function getUserByEmail(email: string): Promise<User | null> {
-   const database = await db;
-
-   const result = await database.find({
-      selector: {
-         type: "user",
-         email: email.toLowerCase(),
-      },
-      limit: 1,
-   });
-
-   if (result.docs.length === 0) {
-      return null;
-   }
-
-   return result.docs[0] as User;
 }
 
  // Сохранение результата игры
@@ -235,45 +215,6 @@ export async function getUserGameRecords(
 }
 
 
- // Получение общей статистики пользователя
-export async function getUserStats(userId: string) {
-   const database = await db;
-   const user = (await database.get(userId)) as User;
-
-   if (!user) {
-      throw new Error("Пользователь не найден");
-   }
-
-   return {
-      username: user.username,
-      totalGamesPlayed: user.totalGamesPlayed,
-      totalScore: user.totalScore,
-      achievements: user.achievements,
-      stats: user.stats,
-   };
-}
-
-
- // Получение всех игр пользователя
-export async function getUserAllGameRecords(
-   userId: string,
-   limit: number = 50
-): Promise<GameRecord[]> {
-   const database = await db;
-
-   const result = await database.find({
-      selector: {
-         type: "game_record",
-         userId,
-      },
-      sort: [{ timestamp: "desc" }],
-      limit,
-   });
-
-   return result.docs as GameRecord[];
-}
-
-
  // Проверка и присвоение достижений
 function checkAchievements(user: User): string[] {
    const achievements: string[] = [...user.achievements];
@@ -296,6 +237,21 @@ function checkAchievements(user: User): string[] {
    // Общий счет > 1000
    if (user.totalScore >= 1000 && !achievements.includes("score_1k")) {
       achievements.push("score_1k");
+   }
+
+   // Общий счет > 5000
+   if (user.totalScore >= 5000 && !achievements.includes("score_5k")) {
+      achievements.push("score_5k");
+   }
+
+   // Общий счет > 10000
+   if (user.totalScore >= 10000 && !achievements.includes("score_10k")) {
+      achievements.push("score_10k");
+   }
+
+   // Общий счет > 1000
+   if (user.totalScore >= 50000 && !achievements.includes("score_50k")) {
+      achievements.push("score_50k");
    }
 
    // Cыграл во все 5 игр
