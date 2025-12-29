@@ -75,6 +75,12 @@ const saveGameResult = useCallback(async (finalScore: number, finalLevel: number
    }
 }, [user, gameStartTime, updateUser]);
 
+useEffect(() => {
+   if (score > 0 && score % 100 === 0) {
+      setLevel(Math.floor(score / 100) + 1);
+   }
+}, [score]);
+
    const spawnPipe = (canvasWidth: number) => {
       const top = Math.random() * 250 + 30;
       pipes.current.push({ x: canvasWidth, top });
@@ -411,8 +417,8 @@ const saveGameResult = useCallback(async (finalScore: number, finalLevel: number
          if (pipe.x + PIPE_WIDTH < BIRD_X && !pipe.scored) {
             pipe.scored = true;
             setScore((s) => {
-               const newScore = s + 1;
-               if (newScore % 10 === 0) setLevel((l) => l + 1);
+               const newScore = s + 10;
+               // if (newScore % 10 === 0) setLevel((l) => l + 1);
                return newScore;
             });
          }
